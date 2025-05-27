@@ -1,0 +1,39 @@
+/* Apexcharts */
+.apexcharts-tooltip {
+    @apply dark:!bg-slate-900 !border-none dark:!text-white !shadow-sm dark:!shadow-gray-800;
+}
+
+.apexcharts-tooltip-title {
+    @apply !bg-gray-50 dark:!bg-slate-800 !border-gray-100 dark:!border-gray-800 dark:!text-white !text-[14px] !font-semibold;
+}
+
+.apexcharts-gridlines-horizontal,
+.apexcharts-gridlines-vertical,
+.apexcharts-grid,
+.apexcharts-gridline,
+.apexcharts-xaxis-tick,
+.apexcharts-xaxis line,
+.apexcharts-gridline line,
+.apexcharts-radar-series line,
+.apexcharts-area-series .apexcharts-series-markers .apexcharts-marker.no-pointer-events, 
+.apexcharts-line-series .apexcharts-series-markers .apexcharts-marker.no-pointer-events, 
+.apexcharts-radar-series path, 
+.apexcharts-radar-series polygon {
+    @apply !pointer-events-none !stroke-gray-100 dark:!stroke-gray-800;
+}
+
+.apexcharts-data-labels, .apexcharts-datalabels text, .apexcharts-xaxis text, .apexcharts-yaxis text {
+    @apply !fill-slate-900 dark:!fill-white;
+}
+
+.apexcharts-legend-text {
+    @apply !text-slate-900 dark:!text-white !font-league !text-[14px] !font-semibold;
+}
+
+.apexcharts-legend-marker {
+    @apply !h-1.5 !align-middle !me-1;
+}
+
+.apexcharts-grid-borders line {
+    @apply stroke-gray-100 dark:stroke-gray-800;
+}

@@ -1,0 +1,11 @@
+/*********************************/
+/*         Ck Editor             */
+/*===============================*/
+.ck.ck-toolbar,
+.ck.ck-editor__main>.ck-editor__editable:not(.ck-focused) {
+    @apply !bg-transparent !border !border-gray-200 dark:!border-gray-800;
+}
+
+.ck.ck-toolbar>.ck-toolbar__items>:not(.ck-toolbar__line-break), .ck.ck-toolbar>.ck.ck-toolbar__grouped-dropdown {
+    @apply !text-slate-900 dark:!text-white;
+}

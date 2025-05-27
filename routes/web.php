@@ -1,0 +1,92 @@
+<?php
+
+use App\Http\Controllers\Admin\CityController;
+use App\Http\Controllers\Admin\PropertyController;
+use App\Http\Controllers\Admin\SocietyController;
+use App\Http\Controllers\Admin\SubSectorController;
+use App\Http\Controllers\Admin\SubSocietyController;
+use App\Http\Controllers\Auth\AuthController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('admin.starter');
+});
+
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+// Admin Routes - No Auth Middleware for now
+Route::prefix('admin')->group(function () {
+
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard.index'); // resources/views/admin/index.blade.php
+    })->name('admin.dashboard');
+
+    Route::resource('/societies', SocietyController::class)->names([
+        'index'   => 'admin.societies.index',
+        'create'  => 'admin.societies.create',
+        'store'   => 'admin.societies.store',
+        'show'    => 'admin.societies.view',
+        'edit'    => 'admin.societies.edit',
+        'update'  => 'admin.societies.update',
+        'destroy' => 'admin.societies.remove',
+    ]);
+    Route::post('societies/{id}/restore', [SocietyController::class, 'restore'])->name('admin.societies.restore');
+
+    Route::resource('subsocieties', SubSocietyController::class)->names([
+        'index'   => 'admin.subsocieties.index',
+        'create'  => 'admin.subsocieties.create',
+        'store'   => 'admin.subsocieties.store',
+        'show'    => 'admin.subsocieties.view',
+        'edit'    => 'admin.subsocieties.edit',
+        'update'  => 'admin.subsocieties.update',
+        'destroy' => 'admin.subsocieties.remove',
+    ]);
+    Route::post('subsocieties/{id}/restore', [SubSocietyController::class, 'restore'])->name('admin.subsocieties.restore');
+
+    Route::resource('subsectors', SubSectorController::class)->names([
+        'index'   => 'admin.subsectors.index',
+        'create'  => 'admin.subsectors.create',
+        'store'   => 'admin.subsectors.store',
+        'show'    => 'admin.subsectors.view',
+        'edit'    => 'admin.subsectors.edit',
+        'update'  => 'admin.subsectors.update',
+        'destroy' => 'admin.subsectors.remove',
+    ]);
+    Route::post('subsectors/{id}/restore', [SubSectorController::class, 'restore'])->name('admin.subsectors.restore');
+    // For AJAX dependent dropdown
+    Route::get('societies/{society}/subsectors', [SubSectorController::class, 'getForSociety'])->name('admin.societies.subsectors');
+
+    Route::resource('properties', PropertyController::class)->names([
+        'index'   => 'admin.properties.index',
+        'create'  => 'admin.properties.create',
+        'store'   => 'admin.properties.store',
+        'show'    => 'admin.properties.view',
+        'edit'    => 'admin.properties.edit',
+        'update'  => 'admin.properties.update',
+        'destroy' => 'admin.properties.remove',
+    ]);
+    Route::get('properties/subsectors/{society}', [PropertyController::class, 'getSubsectors'])->name('admin.properties.subsectors');
+    Route::get('properties/blocks/{subsector}', [PropertyController::class, 'getBlocks'])->name('admin.properties.blocks');
+
+    Route::resource('cities', CityController::class)->names([
+        'index'   => 'admin.cities.index',
+        'create'  => 'admin.cities.create',
+        'store'   => 'admin.cities.store',
+        'show'    => 'admin.cities.view',
+        'edit'    => 'admin.cities.edit',
+        'update'  => 'admin.cities.update',
+        'destroy' => 'admin.cities.remove',
+    ]);
+
+    Route::get('/users', function () {
+        return view('admin.users'); // resources/views/admin/users.blade.php
+    })->name('admin.users');
+
+    Route::get('/settings', function () {
+        return view('admin.settings'); // resources/views/admin/settings.blade.php
+    })->name('admin.settings');
+
+    // Add more as needed for your blade structure
+});
+

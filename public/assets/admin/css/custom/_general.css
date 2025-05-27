@@ -1,0 +1,22 @@
+/*********************************/
+/*             General            */
+/*===============================*/
+body {
+    @apply font-league text-base text-slate-900 dark:text-white;
+}
+
+p {
+    @apply leading-relaxed;
+}
+
+.container {
+    @apply w-full mx-auto px-3;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    @apply leading-normal;
+}
+
+::selection {
+    @apply bg-green-600/90 text-white;
+}
