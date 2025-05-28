@@ -8,9 +8,10 @@ use App\Models\Society;
 use App\Models\SubSector;
 use App\Models\User;
 use App\Services\AiService;
-use Arr;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -22,32 +23,42 @@ use Throwable;
 /**
  * Class SocietyController
  *
- * CRUD operations for Society, including:
+ * Handles CRUD for Society, including:
  * - AI-generated SEO metadata
- * - File uploads via Spatie Media Library (with responsive images)
- * - Nested SubSector management
+ * - Top-level image uploads (with responsive conversions)
+ * - Property-type flags & meta
+ * - SubSector persistence in its own table
  *
  * @package App\Http\Controllers\Admin
  */
 class SocietyController extends Controller
 {
+    /**
+     * Inject the AI SEO service.
+     *
+     * @param AiService $seoService
+     */
     public function __construct(
         protected AiService $seoService
     ) {}
 
     /**
-     * Display a list of societies.
-     * AJAX returns JSON; otherwise renders Blade.
+     * Display a listing of societies.
+     * - AJAX → JSON payload with filters
+     * - Otherwise → Blade view
+     *
+     * @param Request $request
+     * @return View|JsonResponse
      */
     public function index(Request $request): View|JsonResponse
     {
         if ($request->ajax()) {
             $query = Society::with('city')
-                ->when($request->filled('status') && in_array($request->status, ['enabled','disabled']), fn($q) =>
-                $q->where('status', $request->status)
+                ->when($request->filled('status') && in_array($request->status, ['enabled','disabled']),
+                    fn($q) => $q->where('status', $request->status)
                 )
-                ->when($request->filled('search'), fn($q) =>
-                $q->where('name', 'ILIKE', "%{$request->search}%")
+                ->when($request->filled('search'),
+                    fn($q) => $q->where('name', 'ILIKE', "%{$request->search}%")
                 )
                 ->latest();
 
@@ -61,14 +72,14 @@ class SocietyController extends Controller
                 ]);
             }
 
-            $page = $query->paginate($perPage);
+            $p = $query->paginate($perPage);
             return response()->json([
-                'data'  => $page->items(),
-                'links' => $page->linkCollection()->toArray(),
+                'data'  => $p->items(),
+                'links' => $p->linkCollection()->toArray(),
                 'meta'  => [
-                    'current_page' => $page->currentPage(),
-                    'last_page'    => $page->lastPage(),
-                    'total'        => $page->total(),
+                    'current_page' => $p->currentPage(),
+                    'last_page'    => $p->lastPage(),
+                    'total'        => $p->total(),
                 ],
             ]);
         }
@@ -77,7 +88,9 @@ class SocietyController extends Controller
     }
 
     /**
-     * Show the form to create a new society.
+     * Show form for creating a new Society.
+     *
+     * @return View
      */
     public function create(): View
     {
@@ -88,40 +101,44 @@ class SocietyController extends Controller
     }
 
     /**
-     * Store a newly created society.
+     * Store a newly created Society.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     * @throws Throwable
      */
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'            => 'required|string|max:255',
-            'slug'            => 'required|string|unique:societies,slug',
-            'city_id'         => 'required|exists:cities,id',
-            'user_id'         => 'required|exists:users,id',
-            'overview'        => 'nullable|string',
-            'detail'          => 'nullable|string',
-            'status'          => 'required|in:enabled,disabled',
-            'society_image'   => 'nullable|image|max:10240',
-            'banner'          => 'nullable|image|max:10240',
-            'has_sub_sectors' => 'nullable|in:Y,N',
-            'sub_sectors'             => 'nullable|array',
-            'sub_sectors.*.name'      => 'nullable|string|max:255',
-            'sub_sectors.*.title'     => 'nullable|string|max:255',
-            'sub_sectors.*.slug'      => 'nullable|string|max:255',
-            'sub_sectors.*.meta_keywords' => 'nullable|string',
-            'sub_sectors.*.meta_detail'   => 'nullable|string',
-            'sub_sectors.*.detail'        => 'nullable|string',
-            'sub_sectors.*.block'         => 'nullable|string|max:20',
-            'sub_sectors.*.image'         => 'nullable|image|max:10240',
+            'name'            => ['required','string','max:255'],
+            'slug'            => ['required','string','max:255','unique:societies,slug'],
+            'city_id'         => ['required','exists:cities,id'],
+            'user_id'         => ['required','exists:users,id'],
+            'overview'        => ['nullable','string'],
+            'detail'          => ['nullable','string'],
+            'status'          => ['required','in:enabled,disabled'],
+            'society_image'   => ['nullable','image','max:10240'],
+            'banner'          => ['nullable','image','max:10240'],
+            'has_sub_sectors' => ['nullable','in:Y,N'],
+            'sub_sectors'     => ['nullable','array'],
+            'sub_sectors.*.name'         => ['nullable','string','max:255'],
+            'sub_sectors.*.title'        => ['nullable','string','max:255'],
+            'sub_sectors.*.slug'         => ['nullable','string','max:255'],
+            'sub_sectors.*.meta_keywords'=> ['nullable','string'],
+            'sub_sectors.*.meta_detail'  => ['nullable','string'],
+            'sub_sectors.*.detail'       => ['nullable','string'],
+            'sub_sectors.*.block'        => ['nullable','string','max:20'],
+            'sub_sectors.*.image'        => ['nullable','image','max:10240'],
         ]);
 
         DB::beginTransaction();
 
         try {
-            // 1) Generate SEO metadata
+            // Generate SEO metadata using AI service
             $cityName = City::findOrFail($validated['city_id'])->name;
             $seo      = $this->seoService->generate($validated['name'], $cityName);
 
-            // 2) Create society
+            // Create Society core record
             $society = Society::create([
                 'name'            => $validated['name'],
                 'slug'            => $validated['slug'],
@@ -136,23 +153,24 @@ class SocietyController extends Controller
                 'created_by'      => auth()->id() ?: 1,
             ]);
 
-            // 3) Handle top-level images
+            // Handle top-level images & property types
             $this->updateTopLevelImages($society, $request);
 
-            // 4) Handle sub-sectors
+            // Persist each SubSector in its own table
             if ($request->input('has_sub_sectors') === 'Y') {
                 foreach ($request->sub_sectors as $idx => $data) {
+                    /** @var SubSector $sub */
                     $sub = SubSector::create([
                         'society_id'    => $society->id,
                         'parent_id'     => null,
                         'type'          => 'subsector',
-                        'name'          => $data['name']        ?? null,
-                        'slug'          => $data['slug']        ?? null,
-                        'title'         => $data['title']       ?? null,
-                        'meta_keywords' => $data['meta_keywords'] ?? null,
-                        'meta_detail'   => $data['meta_detail']   ?? null,
-                        'detail'        => $data['detail']      ?? null,
-                        'block'         => $data['block']       ?? null,
+                        'name'          => $data['name']         ?? null,
+                        'slug'          => $data['slug']         ?? null,
+                        'title'         => $data['title']        ?? null,
+                        'meta_keywords' => $data['meta_keywords']?? null,
+                        'meta_detail'   => $data['meta_detail']  ?? null,
+                        'detail'        => $data['detail']       ?? null,
+                        'block'         => $data['block']        ?? null,
                     ]);
 
                     if ($file = $request->file("sub_sectors.{$idx}.image")) {
@@ -180,18 +198,20 @@ class SocietyController extends Controller
     }
 
     /**
-     * Show the form for editing an existing society.
+     * Show the form for editing the specified Society.
+     *
+     * @param int $id
+     * @return View
      */
     public function edit(int $id): View
     {
-        $society = Society::with('subSectors')->findOrFail($id);
-        $cities  = City::all();
-        $users   = User::all();
-        $flags   = ['residential_plots','commercial_plots','houses','apartments','farm_houses','shop'];
-
-        // Prepare property-types metadata
-        $savedMeta = $society->property_types ?? [];
+        $society      = Society::with('subSectors')->findOrFail($id);
+        $cities       = City::all();
+        $users        = User::all();
+        $flags        = ['residential_plots','commercial_plots','houses','apartments','farm_houses','shop'];
+        $savedMeta    = $society->property_types ?? [];
         $propertyMeta = [];
+
         foreach ($flags as $type) {
             $propertyMeta[$type] = [
                 'title'       => $savedMeta[$type]['title']       ?? '',
@@ -200,7 +220,7 @@ class SocietyController extends Controller
             ];
         }
 
-        // JS payload for Alpine
+        // Prepare payload for Alpine.js
         $jsData = [
             'name'          => $society->name,
             'slug'          => $society->slug,
@@ -214,10 +234,10 @@ class SocietyController extends Controller
             ],
             'enabled'       => $society->status === 'enabled',
             'types'         => collect($flags)
-                ->mapWithKeys(fn($t)=>[$t=>(bool)$society->{"has_{$t}"}])
+                ->mapWithKeys(fn($t) => [$t => (bool)$society->{"has_{$t}"}])
                 ->all(),
             'hasSubSectors' => $society->subSectors->isNotEmpty(),
-            'subSectors'    => $society->subSectors->map(fn($s)=>[
+            'subSectors'    => $society->subSectors->map(fn($s) => [
                 'id'            => $s->id,
                 'name'          => $s->name,
                 'title'         => $s->title,
@@ -237,43 +257,48 @@ class SocietyController extends Controller
     }
 
     /**
-     * Update an existing society.
+     * Update the specified Society.
+     *
+     * @param Request $request
+     * @param int     $id
+     * @return JsonResponse
+     * @throws Throwable
      */
     public function update(Request $request, int $id): JsonResponse
     {
         $society = Society::with('subSectors')->findOrFail($id);
 
         $validated = $request->validate([
-            'name'            => 'required|string|max:255',
+            'name'            => ['required','string','max:255'],
             'slug'            => ['required','string','max:255', Rule::unique('societies','slug')->ignore($id)],
-            'city_id'         => 'required|exists:cities,id',
-            'user_id'         => 'required|exists:users,id',
-            'overview'        => 'nullable|string',
-            'detail'          => 'nullable|string',
-            'status'          => 'required|in:enabled,disabled',
-            'society_image'   => 'nullable|image|max:10240',
-            'banner'          => 'nullable|image|max:10240',
-            'has_sub_sectors' => 'nullable|in:Y,N',
-            'sub_sectors'             => 'nullable|array',
-            'sub_sectors.*.id'        => 'nullable|exists:sub_sectors,id',
-            'sub_sectors.*.name'      => 'nullable|string|max:255',
-            'sub_sectors.*.title'     => 'nullable|string|max:255',
-            'sub_sectors.*.slug'      => 'nullable|string|max:255',
-            'sub_sectors.*.meta_keywords' => 'nullable|string',
-            'sub_sectors.*.meta_detail'   => 'nullable|string',
-            'sub_sectors.*.detail'        => 'nullable|string',
-            'sub_sectors.*.block'         => 'nullable|string|max:20',
-            'sub_sectors.*.image'         => 'nullable|image|max:10240',
+            'city_id'         => ['required','exists:cities,id'],
+            'user_id'         => ['required','exists:users,id'],
+            'overview'        => ['nullable','string'],
+            'detail'          => ['nullable','string'],
+            'status'          => ['required','in:enabled,disabled'],
+            'society_image'   => ['nullable','image','max:10240'],
+            'banner'          => ['nullable','image','max:10240'],
+            'has_sub_sectors' => ['nullable','in:Y,N'],
+            'sub_sectors'     => ['nullable','array'],
+            'sub_sectors.*.id'         => ['nullable','exists:sub_sectors,id'],
+            'sub_sectors.*.name'       => ['nullable','string','max:255'],
+            'sub_sectors.*.title'      => ['nullable','string','max:255'],
+            'sub_sectors.*.slug'       => ['nullable','string','max:255'],
+            'sub_sectors.*.meta_keywords'=> ['nullable','string'],
+            'sub_sectors.*.meta_detail'  => ['nullable','string'],
+            'sub_sectors.*.detail'       => ['nullable','string'],
+            'sub_sectors.*.block'        => ['nullable','string','max:20'],
+            'sub_sectors.*.image'        => ['nullable','image','max:10240'],
         ]);
 
         DB::beginTransaction();
 
         try {
-            // 1) Regenerate SEO metadata
+            // Regenerate SEO metadata
             $cityName = City::findOrFail($validated['city_id'])->name;
             $seo      = $this->seoService->generate($validated['name'], $cityName);
 
-            // 2) Update core fields
+            // Update core Society fields
             $society->update([
                 'name'            => $validated['name'],
                 'slug'            => $validated['slug'],
@@ -287,10 +312,13 @@ class SocietyController extends Controller
                 'seo_keywords'    => $seo['seo_keywords'],
             ]);
 
-            // 3) Top-level images & property types
+            // Update images & property-types
             $this->updateTopLevelImages($society, $request);
 
-            // 4) Sync sub-sectors
+            // Sync SubSectors:
+            //  • delete ones removed
+            //  • update existing
+            //  • create new
             $incoming = collect($request->input('sub_sectors', []));
             $keepIds  = $incoming->pluck('id')->filter()->all();
             $society->subSectors()->whereNotIn('id', $keepIds)->delete();
@@ -304,7 +332,7 @@ class SocietyController extends Controller
                         'society_id'    => $society->id,
                         'parent_id'     => null,
                         'type'          => 'subsector',
-                        ...Arr::except($data,['image']),
+                        ...Arr::except($data, ['image']),
                     ]);
                 }
                 if ($file = $request->file("sub_sectors.{$idx}.image")) {
@@ -331,8 +359,13 @@ class SocietyController extends Controller
     }
 
     /**
-     * Display a single society.
-     * AJAX returns JSON; otherwise Blade.
+     * Display a single Society.
+     * - AJAX → enriched JSON
+     * - Otherwise → Blade view
+     *
+     * @param int $id
+     * @param Request $request
+     * @return View|JsonResponse
      */
     public function show(int $id, Request $request): View|JsonResponse
     {
@@ -363,7 +396,10 @@ class SocietyController extends Controller
     }
 
     /**
-     * Soft-delete a society.
+     * Soft-delete a Society.
+     *
+     * @param int $id
+     * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
@@ -372,7 +408,10 @@ class SocietyController extends Controller
     }
 
     /**
-     * Restore a soft-deleted society.
+     * Restore a soft-deleted Society.
+     *
+     * @param int $id
+     * @return JsonResponse
      */
     public function restore(int $id): JsonResponse
     {
@@ -381,7 +420,12 @@ class SocietyController extends Controller
     }
 
     /**
-     * Upload or replace a top-level image.
+     * Upload or replace a top-level image (society_image or banner).
+     *
+     * @param Society $society
+     * @param Request $request
+     * @param string  $field      The request key (e.g. 'society_image' or 'banner')
+     * @param string  $collection The Spatie media collection name
      */
     private function uploadImage(Society $society, Request $request, string $field, string $collection): void
     {
@@ -390,7 +434,6 @@ class SocietyController extends Controller
         }
 
         $society->clearMediaCollection($collection);
-
         $file         = $request->file($field);
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $extension    = $file->getClientOriginalExtension();
@@ -404,17 +447,19 @@ class SocietyController extends Controller
                 ->withResponsiveImages()
                 ->toMediaCollection($collection);
         } catch (FileDoesNotExist|FileIsTooBig) {
-            // silently fail
+            // Fail silently, but you could log if desired
         }
     }
 
     /**
-     * Upload or replace a sub-sector’s image.
+     * Upload or replace a SubSector image.
+     *
+     * @param SubSector     $sub
+     * @param UploadedFile  $file
      */
     private function uploadSubSectorImage(SubSector $sub, UploadedFile $file): void
     {
         $sub->clearMediaCollection('sub_sector_image');
-
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $extension    = $file->getClientOriginalExtension();
         $fileName     = now()->format('Ymd') . '-' . Str::random(6) . '.' . $extension;
@@ -427,19 +472,23 @@ class SocietyController extends Controller
                 ->withResponsiveImages()
                 ->toMediaCollection('sub_sector_image');
         } catch (FileDoesNotExist|FileIsTooBig) {
-            // silently fail
+            // Fail silently
         }
     }
 
     /**
-     * Update both top-level images and property-types metadata.
+     * Handle both top-level images + property-type flags & meta.
+     *
+     * @param Society $society
+     * @param Request $request
      */
     private function updateTopLevelImages(Society $society, Request $request): void
     {
+        // main & banner
         $this->uploadImage($society, $request, 'society_image', 'society_image');
         $this->uploadImage($society, $request, 'banner',        'banner');
 
-        // Sync property-type flags & meta
+        // property-type flags & metadata
         $flags = ['residential_plots','commercial_plots','houses','apartments','farm_houses','shop'];
         $meta  = [];
 

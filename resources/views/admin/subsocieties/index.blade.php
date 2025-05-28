@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'View Sub Societies - Advice Associates Real Estate Dashboard')
+@section('title', 'View Sub Societies - Advice Associates Real Estate AI Dashboard')
 
 @section('content')
     <div class="container-fluid relative px-3">
@@ -107,20 +107,20 @@
                         return;
                     }
 
-                    subs.forEach(sub => {
+                    subs.forEach(subSector => {
                         tableBody.insertAdjacentHTML('beforeend', `
                             <tr>
-                                <td class="border p-2">${sub.id}</td>
-                                <td class="border p-2">${sub.name}</td>
-                                <td class="border p-2">${sub.slug}</td>
-                                <td class="border p-2">${sub.type || '-'}</td>
-                                <td class="border p-2">${sub.society.name || 'N/A'}</td>
-                                <td class="border p-2 capitalize">${sub.status}</td>
+                                <td class="border p-2">${subSector.id}</td>
+                                <td class="border p-2">${subSector.name}</td>
+                                <td class="border p-2">${subSector.slug}</td>
+                                <td class="border p-2">${subSector.type || '-'}</td>
+                                <td class="border p-2">${subSector.society.name || 'N/A'}</td>
+                                <td class="border p-2 capitalize">${subSector.status}</td>
                                 <td class="border p-2">
-                                    <button onclick="showSubSociety(${sub.id})" class="text-blue-600 hover:underline mr-2">View</button>
-                                    <button onclick="editSubSociety(${sub.id})" class="text-blue-600 hover:underline mr-2">Edit</button>
-                                    <button onclick="deleteSubSociety(${sub.id})" class="text-red-600 hover:underline">Delete</button>
-                                    ${sub.deleted_at ? `<button onclick="restoreSubSociety(${sub.id})" class="ml-2 text-green-600 hover:underline">Restore</button>` : ''}
+                                    <button onclick="showSubSociety(${subSector.id})" class="text-blue-600 hover:underline mr-2">View</button>
+                                    <button onclick="editSubSociety(${subSector.id})" class="text-blue-600 hover:underline mr-2">Edit</button>
+                                    <button onclick="deleteSubSociety(${subSector.id})" class="text-red-600 hover:underline">Delete</button>
+                                    ${subSector.deleted_at ? `<button onclick="restoreSubSociety(${subSector.id})" class="ml-2 text-green-600 hover:underline">Restore</button>` : ''}
                                 </td>
                             </tr>
                         `);
@@ -182,7 +182,7 @@
                 window.location.href = "{{ route('admin.subsocieties.edit', ':id') }}".replace(':id', id);
             };
             window.deleteSubSociety = async id => {
-                if (!confirm('Are you sure you want to delete this sub-society?')) return;
+                if (!confirm('Are you sure you want to delete this subSector-society?')) return;
                 try {
                     const url = "{{ route('admin.subsocieties.remove', ':id') }}".replace(':id', id);
                     await axios.delete(url);

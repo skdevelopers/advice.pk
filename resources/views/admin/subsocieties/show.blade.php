@@ -18,7 +18,7 @@
             <!-- Details Container -->
             <div id="subsocietyDetails" class="mt-6">
                 <div class="text-center text-gray-400 py-10" id="loading">
-                    Loading sub-society details...
+                    Loading subSector-society details...
                 </div>
             </div>
         </div>

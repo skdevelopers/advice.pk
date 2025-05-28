@@ -10,7 +10,8 @@ use App\Models\SubSociety;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 
 /**
  * Class SubSocietyController
@@ -60,8 +61,12 @@ class SubSocietyController extends Controller
 
         // Handle featured image if provided
         if ($request->hasFile('subsociety_image')) {
-            $sub->addMediaFromRequest('subsociety_image')
-                ->toMediaCollection('subsociety_image');
+            try {
+                $sub->addMediaFromRequest('subsociety_image')
+                    ->toMediaCollection('subsociety_image');
+            } catch (FileDoesNotExist|FileIsTooBig $e) {
+
+            }
         }
 
         if ($request->ajax()) {
@@ -107,8 +112,12 @@ class SubSocietyController extends Controller
         // Replace featured image if new one uploaded
         if ($request->hasFile('subsociety_image')) {
             $subsociety->clearMediaCollection('subsociety_image');
-            $subsociety->addMediaFromRequest('subsociety_image')
-                ->toMediaCollection('subsociety_image');
+            try {
+                $subsociety->addMediaFromRequest('subsociety_image')
+                    ->toMediaCollection('subsociety_image');
+            } catch (FileDoesNotExist|FileIsTooBig $e) {
+
+            }
         }
 
         if ($request->ajax()) {

@@ -48,10 +48,10 @@ Route::prefix('admin')->group(function () {
         'index'   => 'admin.subsectors.index',
         'create'  => 'admin.subsectors.create',
         'store'   => 'admin.subsectors.store',
-        'show'    => 'admin.subsectors.view',
+        'show'    => 'admin.subsectors.show',
         'edit'    => 'admin.subsectors.edit',
         'update'  => 'admin.subsectors.update',
-        'destroy' => 'admin.subsectors.remove',
+        'destroy' => 'admin.subsectors.destroy',
     ]);
     Route::post('subsectors/{id}/restore', [SubSectorController::class, 'restore'])->name('admin.subsectors.restore');
     // For AJAX dependent dropdown
@@ -64,7 +64,7 @@ Route::prefix('admin')->group(function () {
         'show'    => 'admin.properties.view',
         'edit'    => 'admin.properties.edit',
         'update'  => 'admin.properties.update',
-        'destroy' => 'admin.properties.remove',
+        'destroy' => 'admin.properties.destroy',
     ]);
     Route::get('properties/subsectors/{society}', [PropertyController::class, 'getSubsectors'])->name('admin.properties.subsectors');
     Route::get('properties/blocks/{subsector}', [PropertyController::class, 'getBlocks'])->name('admin.properties.blocks');

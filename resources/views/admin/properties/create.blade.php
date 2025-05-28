@@ -108,8 +108,8 @@
                                 <select name="sub_sector_id" x-model="form.sub_sector_id" @change="loadBlocks"
                                         class="w-full border rounded px-3 py-2" required>
                                     <option value="">Select Sub Sector</option>
-                                    <template x-for="sub in subsectors" :key="sub.id">
-                                        <option :value="sub.id" x-text="sub.name"></option>
+                                    <template x-for="subSector in subsectors" :key="subSector.id">
+                                        <option :value="subSector.id" x-text="subSector.name"></option>
                                     </template>
                                 </select>
                                 <p class="text-red-600 text-sm" x-text="errors.sub_sector_id"
@@ -462,7 +462,7 @@
                         this.subsectors = res.data || [];
                     } catch (e) {
                         this.subsectors = [];
-                        showToast('Failed to load sub-sectors.', 'error');
+                        showToast('Failed to load subSector-sectors.', 'error');
                     }
                 },
 

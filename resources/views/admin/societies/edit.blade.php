@@ -230,21 +230,21 @@
 
                     <template x-if="hasSubSectors">
                         <div class="space-y-6">
-                            <template x-for="(sub, idx) in subSectors" :key="sub.id ?? idx">
+                            <template x-for="(subSector, idx) in subSectors" :key="subSector.id ?? idx">
                                 <div class="border p-4 rounded bg-white shadow-sm relative">
                                     <button type="button" class="absolute top-2 right-2 text-red-600" @click="subSectors.splice(idx,1)">&times;</button>
-                                    <input type="hidden" :name="`sub_sectors[${idx}][id]`" x-model="sub.id">
+                                    <input type="hidden" :name="`sub_sectors[${idx}][id]`" x-model="subSector.id">
 
                                     {{-- Name & Title --}}
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label class="block text-sm mb-1">Name</label>
-                                            <input type="text" :name="`sub_sectors[${idx}][name]`" x-model="sub.name" class="w-full border rounded px-3 py-2">
+                                            <input type="text" :name="`sub_sectors[${idx}][name]`" x-model="subSector.name" class="w-full border rounded px-3 py-2">
                                         </div>
                                         <div>
                                             <label class="block text-sm mb-1">Title</label>
-                                            <input type="text" :name="`sub_sectors[${idx}][title]`" x-model="sub.title" class="w-full border rounded px-3 py-2"
-                                                   @input="sub.slug = sub.title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-')"
+                                            <input type="text" :name="`sub_sectors[${idx}][title]`" x-model="subSector.title" class="w-full border rounded px-3 py-2"
+                                                   @input="subSector.slug = subSector.title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-')"
                                             >
                                         </div>
                                     </div>
@@ -253,26 +253,26 @@
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                         <div>
                                             <label class="block text-sm mb-1">Slug</label>
-                                            <input type="text" :name="`sub_sectors[${idx}][slug]`" x-model="sub.slug" class="w-full border rounded px-3 py-2">
+                                            <input type="text" :name="`sub_sectors[${idx}][slug]`" x-model="subSector.slug" class="w-full border rounded px-3 py-2">
                                         </div>
                                         <div>
                                             <label class="block text-sm mb-1">Meta Keywords</label>
-                                            <input type="text" :name="`sub_sectors[${idx}][meta_keywords]`" x-model="sub.meta_keywords" class="w-full border rounded px-3 py-2">
+                                            <input type="text" :name="`sub_sectors[${idx}][meta_keywords]`" x-model="subSector.meta_keywords" class="w-full border rounded px-3 py-2">
                                         </div>
                                         <div>
                                             <label class="block text-sm mb-1">Meta Detail</label>
-                                            <input type="text" :name="`sub_sectors[${idx}][meta_detail]`" x-model="sub.meta_detail" class="w-full border rounded px-3 py-2">
+                                            <input type="text" :name="`sub_sectors[${idx}][meta_detail]`" x-model="subSector.meta_detail" class="w-full border rounded px-3 py-2">
                                         </div>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm mb-1">Detail</label>
-                                        <textarea :name="`sub_sectors[${idx}][detail]`" x-model="sub.detail" class="w-full border rounded px-3 py-2"></textarea>
+                                        <textarea :name="`sub_sectors[${idx}][detail]`" x-model="subSector.detail" class="w-full border rounded px-3 py-2"></textarea>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm mb-1">Block</label>
-                                        <select :name="`sub_sectors[${idx}][block]`" x-model="sub.block" class="w-full border rounded px-3 py-2">
+                                        <select :name="`sub_sectors[${idx}][block]`" x-model="subSector.block" class="w-full border rounded px-3 py-2">
                                             <option value="Block">Block</option>
                                             <option value="Sector">Sector</option>
                                             <option value="Zone">Zone</option>
@@ -284,8 +284,8 @@
                                     <div>
                                         <label class="block text-sm mb-1">Image</label>
                                         <div class="preview-box h-36 mb-2 bg-gray-100 flex items-center justify-center rounded">
-                                            <template x-if="sub.image_url"><img :src="sub.image_url" class="max-h-36 object-contain"></template>
-                                            <span x-show="! sub.image_url">No image</span>
+                                            <template x-if="subSector.image_url"><img :src="subSector.image_url" class="max-h-36 object-contain"></template>
+                                            <span x-show="! subSector.image_url">No image</span>
                                         </div>
                                         <input type="file" :name="`sub_sectors[${idx}][image]`" @change="previewFile($event, idx)" class="w-full">
                                     </div>

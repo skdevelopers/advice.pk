@@ -62,22 +62,22 @@
 
                     // Sub Sectors
                     const subSectors = (data.sub_sectors && data.sub_sectors.length)
-                        ? data.sub_sectors.map(sub => `
+                        ? data.sub_sectors.map(subSector => `
                     <div class="border rounded-lg p-3 bg-gray-50 dark:bg-slate-800 mb-2 shadow">
-                        <div class="mb-1"><span class="font-medium">Name:</span> ${safe(sub.name)}</div>
-                        <div class="mb-1"><span class="font-medium">Title:</span> ${safe(sub.title)}</div>
-                        <div class="mb-1"><span class="font-medium">Slug:</span> ${safe(sub.slug)}</div>
-                        <div class="mb-1"><span class="font-medium">Block:</span> ${safe(sub.block)}</div>
-                        <div class="mb-1"><span class="font-medium">Detail:</span> ${safe(sub.detail)}</div>
+                        <div class="mb-1"><span class="font-medium">Name:</span> ${safe(subSector.name)}</div>
+                        <div class="mb-1"><span class="font-medium">Title:</span> ${safe(subSector.title)}</div>
+                        <div class="mb-1"><span class="font-medium">Slug:</span> ${safe(subSector.slug)}</div>
+                        <div class="mb-1"><span class="font-medium">Block:</span> ${safe(subSector.block)}</div>
+                        <div class="mb-1"><span class="font-medium">Detail:</span> ${safe(subSector.detail)}</div>
                         <div class="mb-1">
-                            ${(sub.media && sub.media.length)
-                            ? sub.media.map(media => `<img src="${media.original_url}" class="h-12 inline mr-2 mb-2 rounded border shadow">`).join('')
+                            ${(subSector.media && subSector.media.length)
+                            ? subSector.media.map(media => `<img src="${media.original_url}" class="h-12 inline mr-2 mb-2 rounded border shadow">`).join('')
                             : '<span class="text-xs text-gray-400">No Image</span>'
                         }
                         </div>
                     </div>
                 `).join('')
-                        : `<div class="text-gray-400 text-sm">No sub-sectors.</div>`;
+                        : `<div class="text-gray-400 text-sm">No subSector-sectors.</div>`;
 
                     let html = `
                                 <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-8 border border-slate-200 dark:border-slate-800">

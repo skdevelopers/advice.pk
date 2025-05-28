@@ -202,7 +202,7 @@
                                         Fill Out Following Fields To Enter The Sub Sector
                                     </label>
 
-                                    <template x-for="(sub, index) in subSectors" :key="index">
+                                    <template x-for="(subSector, index) in subSectors" :key="index">
                                         <div class="mb-6 border border-gray-200 p-4 rounded bg-white shadow-sm">
                                             <!-- Remove icon: shown only when index > 0 -->
                                             <div class="flex justify-end mb-2" x-show="index > 0">
@@ -221,14 +221,14 @@
                                                        class="input"
                                                        :name="`sub_sectors[${index}][title]`"
                                                        placeholder="Title"
-                                                       x-model="sub.title"
-                                                       @input="sub.slug = sub.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')">
+                                                       x-model="subSector.title"
+                                                       @input="subSector.slug = subSector.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')">
 
                                                 <input type="text"
                                                        class="input"
                                                        :name="`sub_sectors[${index}][slug]`"
                                                        placeholder="Slug (auto-generated)"
-                                                       x-model="sub.slug">
+                                                       x-model="subSector.slug">
 
                                                 <input type="text" class="input" :name="`sub_sectors[${index}][meta_keywords]`" placeholder="Meta Keywords">
                                                 <input type="text" class="input" :name="`sub_sectors[${index}][meta_detail]`" placeholder="Meta Detail">

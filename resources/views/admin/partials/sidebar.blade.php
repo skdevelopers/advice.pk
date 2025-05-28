@@ -53,15 +53,27 @@
 
             <li class="sidebar-dropdown">
                 <a href="javascript:void(0)">
-                    <i class="mdi mdi-home-map-marker"></i> Sub Societies
+                    <i class="mdi mdi-home-map-marker"></i> Sub Society | Sector
                 </a>
                 <div class="sidebar-submenu">
                     <ul>
-                        <li><a href="{{ url('admin/subsocieties/create') }}">Add New Sub Society</a></li>
-                        <li><a href="{{ url('admin/subsocieties') }}">View All Sub Societies</a></li>
+                        <li><a href="{{ url('admin/subsectors/create') }}">Add New Sub </a></li>
+                        <li><a href="{{ url('admin/subsectors') }}">View All Sub </a></li>
                     </ul>
                 </div>
             </li>
+
+{{--            <li class="sidebar-dropdown">--}}
+{{--                <a href="javascript:void(0)">--}}
+{{--                    <i class="mdi mdi-home-map-marker"></i> Sub Societies--}}
+{{--                </a>--}}
+{{--                <div class="sidebar-submenu">--}}
+{{--                    <ul>--}}
+{{--                        <li><a href="{{ url('admin/subsocieties/create') }}">Add New Sub Society</a></li>--}}
+{{--                        <li><a href="{{ url('admin/subsocieties') }}">View All Sub Societies</a></li>--}}
+{{--                    </ul>--}}
+{{--                </div>--}}
+{{--            </li>--}}
 
             <li class="sidebar-dropdown">
                 <a href="javascript:void(0)">

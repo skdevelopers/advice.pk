@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('sub_sectors', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('society_id')->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('sub_society_id')->nullable()->after('society_id');
-            $table->foreign('sub_society_id')->references('id')->on('sub_societies')->onDelete('cascade');
+            $table->foreignId('society_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('sub_sectors')
+                ->cascadeOnDelete();
 
             $table->string('name')->nullable();
             $table->string('title')->nullable();
