@@ -23,7 +23,7 @@ return new class extends Migration
 
             // Core details
             $table->string('purpose'); // sale, rent
-            $table->string('property_type'); // home, plot, apartment, etc.
+            $table->string('property_type')->nullable(); // home, plot, apartment, etc.
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description')->nullable();

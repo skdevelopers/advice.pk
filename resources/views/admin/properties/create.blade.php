@@ -36,6 +36,7 @@
                           class="space-y-6">
 
                         {{-- Hidden fields --}}
+                        <input type="hidden" name="status" value="enabled">
                         <input type="hidden" name="user_id" :value="form.user_id">
                         <input type="hidden" name="created_by" :value="form.created_by">
 
@@ -62,31 +63,74 @@
                             <p class="text-red-600" x-text="errors.property_type" x-show="errors.property_type"></p>
                         </fieldset>
 
-                        {{-- Title & Description --}}
+                        {{-- Title, Slug & Keywords --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Title -->
                             <div>
-                                <label class="block font-medium">Property Title<span
-                                        class="text-red-500">*</span></label>
-                                <input type="text" name="title" x-model="form.title"
-                                       class="w-full border rounded px-3 py-2" required>
+                                <label class="block font-medium">
+                                    Property Title<span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       name="title"
+                                       x-model="form.title"
+                                       class="w-full border rounded px-3 py-2"
+                                       required>
                                 <p class="text-red-600" x-text="errors.title" x-show="errors.title"></p>
                             </div>
+
+                            <!-- Slug (readonly, auto‐generated) -->
                             <div>
-                                <label class="block font-medium">Property Description<span class="text-red-500">*</span></label>
-                                <textarea name="description" x-model="form.description"
-                                          class="w-full border rounded px-3 py-2" rows="3" required></textarea>
-                                <p class="text-red-600" x-text="errors.description" x-show="errors.description"></p>
+                                <label class="block font-medium">
+                                    Slug<span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       name="slug"
+                                       x-model="form.slug"
+                                       class="w-full border rounded px-3 py-2"
+                                       readonly
+                                       required>
+                                <p class="text-red-600" x-text="errors.slug" x-show="errors.slug"></p>
+                            </div>
+
+                            <!-- Keywords -->
+                            <div>
+                                <label class="block font-medium">
+                                    Property Keywords<span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       name="keywords"
+                                       x-model="form.keywords"
+                                       class="w-full border rounded px-3 py-2"
+                                       required>
+                                <p class="text-red-600" x-text="errors.keywords" x-show="errors.keywords"></p>
+                            </div>
+                            {{-- Price: always visible --}}
+                            <div>
+                                <label class="block font-medium">
+                                    Price<span class="text-red-500">*</span>
+                                </label>
+                                <input type="number"
+                                       name="price"
+                                       x-model="form.price"
+                                       class="w-full border rounded px-3 py-2"
+                                       required>
+                                <p class="text-red-600" x-text="errors.price" x-show="errors.price"></p>
                             </div>
                         </div>
 
-                        {{-- Keywords --}}
+                        {{-- Description (full width) --}}
                         <div>
-                            <label class="block font-medium">Property Keywords<span
-                                    class="text-red-500">*</span></label>
-                            <input type="text" name="keywords" x-model="form.keywords"
-                                   class="w-full border rounded px-3 py-2" required>
-                            <p class="text-red-600" x-text="errors.keywords" x-show="errors.keywords"></p>
+                            <label class="block font-medium">
+                                Property Description<span class="text-red-500">*</span>
+                            </label>
+                            <textarea name="description"
+                                      x-model="form.description"
+                                      class="w-full border rounded px-3 py-2"
+                                      rows="4"
+                                      required></textarea>
+                            <p class="text-red-600" x-text="errors.description" x-show="errors.description"></p>
                         </div>
+
 
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                             <!-- Society -->
@@ -96,14 +140,14 @@
                                         class="w-full border rounded px-3 py-2" required>
                                     <option value="">Select Society</option>
                                     @foreach($societies as $soc)
-                                    <option value="{{ $soc->id }}">{{ $soc->society_name }}</option>
+                                    <option value="{{ $soc->id }}">{{ $soc->name }}</option>
                                     @endforeach
                                 </select>
                                 <p class="text-red-600 text-sm" x-text="errors.society_id"
                                    x-show="errors.society_id"></p>
                             </div>
                             <!-- Sub Sector -->
-                            <div x-show="subsectors.length > 0" x-cloak>
+                            <div>
                                 <label class="block font-medium">Sub Sector<span class="text-red-500">*</span></label>
                                 <select name="sub_sector_id" x-model="form.sub_sector_id" @change="loadBlocks"
                                         class="w-full border rounded px-3 py-2" required>
@@ -116,7 +160,7 @@
                                    x-show="errors.sub_sector_id"></p>
                             </div>
                             <!-- Block -->
-                            <div x-show="blockSectors.length > 0" x-cloak>
+                            <div>
                                 <label class="block font-medium">Sector/Zone/Block</label>
                                 <select name="block_sector" x-model="form.block_sector"
                                         class="w-full border rounded px-3 py-2">
@@ -182,11 +226,7 @@
                                     <input type="text" name="plot_no" x-model="form.plot_no"
                                            class="w-full border rounded px-3 py-2">
                                 </div>
-                                <div>
-                                    <label class="block font-medium">Price<span class="text-red-500">*</span></label>
-                                    <input type="number" name="price" x-model="form.price"
-                                           class="w-full border rounded px-3 py-2">
-                                </div>
+
                             </div>
                         </div>
 
@@ -290,26 +330,26 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block font-medium">Best Selling Property</label>
-                                <select name="best_selling_property" x-model="form.best_selling_property"
+                                <select name="best_selling" x-model="form.best_selling"
                                         class="w-full border rounded px-3 py-2">
-                                    <option value="N">No</option>
-                                    <option value="Y">Yes</option>
+                                    <option :value="false">No</option>
+                                    <option :value="true">Yes</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block font-medium">Today Deal</label>
                                 <select name="today_deal" x-model="form.today_deal"
                                         class="w-full border rounded px-3 py-2">
-                                    <option value="N">No</option>
-                                    <option value="Y">Yes</option>
+                                    <option :value="false">No</option>
+                                    <option :value="true">Yes</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block font-medium">Send on Social Media</label>
                                 <select name="mail_send" x-model="form.mail_send"
                                         class="w-full border rounded px-3 py-2">
-                                    <option value="N">No</option>
-                                    <option value="Y">Yes</option>
+                                    <option :value="false">No</option>
+                                    <option :value="true">Yes</option>
                                 </select>
                             </div>
                         </div>
@@ -383,11 +423,14 @@
 @push('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
+            // ensure CSRF for axios
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
+
             Alpine.data('propertyForm', () => ({
                 submitting: false,
                 form: {
                     user_id: {{ auth()->check() ? auth()->id() : 1 }},
-                    created_by: '{{ auth()->check() ? auth()->id() : 'Abdul Hadi' }}',
+                    created_by: '{{ auth()->check() ? auth()->user()->name : "Abdul Hadi" }}',
                     purpose: '',
                     property_type: '',
                     title: '',
@@ -413,13 +456,15 @@
                     instalments_downpayment: '', confirmation: '',
                     instalments_monthly_instalments: '', instalments_monthly_instalments_price: '',
                     video: '', short_video: '',
-                    best_selling_property: 'N', today_deal: 'N', mail_send: 'N',
+                    best_selling: false, today_deal: false, mail_send: false,
                     longitude: '', latitude: '',
-                    main_image: null
+                    status: 'enabled',
+                    main_image: ''
                 },
                 errors: {},
-                subsectors: [],
-                blockSectors: [],
+                subsectors: [],         // <-- real data will fill this
+                blockSectors: [],       // <-- real data will fill this
+
                 propertyTypes: [
                     { value: 'homes', label: 'Homes' },
                     { value: 'plots', label: 'Plots' },
@@ -448,38 +493,62 @@
                 ],
 
                 handleFileUpload(event) {
-                    this.form.main_image = event.target.files[0];
+                    this.form.main_image = event.target.files[0] || null;
                 },
 
                 async loadSubsectors() {
                     this.form.sub_sector_id = '';
-                    this.form.block_sector = '';
-                    this.subsectors = [];
-                    this.blockSectors = [];
+                    this.form.block_sector   = '';
+                    this.subsectors           = [];
+                    this.blockSectors         = [];
+
                     if (!this.form.society_id) return;
+
                     try {
-                        const res = await axios.get(`/admin/properties/subsectors/${this.form.society_id}`);
-                        this.subsectors = res.data || [];
+                        let url = '{{ route("admin.properties.getSubsectors", ":id") }}'
+                            .replace(':id', this.form.society_id);
+                        let res =  await axios.get(url);
+                        if (!res.data.length) {
+                            showToast('No subsectors found for this society.', 'info');
+                        } else {
+                            this.subsectors = res.data;
+                        }
                     } catch (e) {
-                        this.subsectors = [];
-                        showToast('Failed to load subSector-sectors.', 'error');
+                        showToast('Failed to load subsectors.', 'error');
                     }
                 },
 
                 async loadBlocks() {
                     this.form.block_sector = '';
-                    this.blockSectors = [];
+                    this.blockSectors       = [];
+
                     if (!this.form.sub_sector_id) return;
+
                     try {
-                        const res = await axios.get(`/admin/properties/blocks/${this.form.sub_sector_id}`);
-                        this.blockSectors = res.data || [];
+                        let res = await axios.get(
+                            `/admin/properties/blocks/${this.form.sub_sector_id}`
+                        );
+                        if (!res.data.length) {
+                            showToast('No blocks found for this subsector.', 'info');
+                        } else {
+                            this.blockSectors = res.data;
+                        }
                     } catch (e) {
-                        this.blockSectors = [];
                         showToast('Failed to load blocks.', 'error');
                     }
                 },
+
                 init() {
-                    // Preload subsectors/blocks if editing
+                    // auto-slugify whenever title changes
+                    this.$watch('form.title', (val) => {
+                        this.form.slug = val
+                            .trim()
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, '-')    // non-alphanumeric → dash
+                            .replace(/(^-|-$)/g, '');       // trim leading/trailing dash
+                    });
+
+                    // existing preload logic
                     if (this.form.society_id) {
                         this.loadSubsectors().then(() => {
                             if (this.form.sub_sector_id) {
@@ -489,21 +558,37 @@
                     }
                 },
 
+
                 async submitForm() {
                     this.submitting = true;
-                    this.errors = {};
+                    this.errors    = {};
 
-                    const data = new FormData();
+                    let data = new FormData();
+
                     for (let key in this.form) {
-                        data.append(key, this.form[key]);
+                        // skip main_image when not selected
+                        if (key === 'main_image') {
+                            if (this.form.main_image instanceof File) {
+                                data.append('main_image', this.form.main_image);
+                            }
+                            continue;
+                        }
+
+                        // normalize booleans to 0/1
+                        if (['best_selling','today_deal','mail_send'].includes(key)) {
+                            data.append(key, this.form[key] ? 1 : 0);
+                        } else {
+                            data.append(key, this.form[key]);
+                        }
                     }
 
+
                     try {
-                        const res = await axios.post('{{ route("admin.properties.store") }}', data, {
-                            headers: {'Content-Type':'multipart/form-data'}
+                        let res = await axios.post('{{ route("admin.properties.store") }}', data, {
+                            headers: {'Content-Type': 'multipart/form-data'}
                         });
                         showToast(res.data.message || 'Property created!', 'success');
-                        setTimeout(() => window.location.reload(), 1200);
+                        setTimeout(() => location.reload(), 1200);
                     } catch (err) {
                         if (err.response?.data?.errors) {
                             this.errors = err.response.data.errors;
@@ -516,6 +601,5 @@
                 }
             }));
         });
-
     </script>
 @endpush

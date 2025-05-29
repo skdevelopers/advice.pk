@@ -61,13 +61,17 @@ Route::prefix('admin')->group(function () {
         'index'   => 'admin.properties.index',
         'create'  => 'admin.properties.create',
         'store'   => 'admin.properties.store',
-        'show'    => 'admin.properties.view',
+        'show'    => 'admin.properties.show',
         'edit'    => 'admin.properties.edit',
         'update'  => 'admin.properties.update',
         'destroy' => 'admin.properties.destroy',
     ]);
-    Route::get('properties/subsectors/{society}', [PropertyController::class, 'getSubsectors'])->name('admin.properties.subsectors');
-    Route::get('properties/blocks/{subsector}', [PropertyController::class, 'getBlocks'])->name('admin.properties.blocks');
+    Route::get('properties/getSubsectors/{society}',
+        [PropertyController::class, 'getSubsectors'])
+        ->name('admin.properties.getSubsectors');
+    Route::get('properties/blocks/{subsector}',
+        [PropertyController::class, 'getBlocks'])
+        ->name('admin.properties.blocks');
 
     Route::resource('cities', CityController::class)->names([
         'index'   => 'admin.cities.index',

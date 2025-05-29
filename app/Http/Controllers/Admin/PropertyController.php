@@ -8,11 +8,13 @@ use App\Models\Society;
 use App\Models\SubSector;
 use App\Models\User;
 use App\Services\AiService;
+use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -65,7 +67,17 @@ class PropertyController extends Controller
         $subsectors     = SubSector::all();
         $sizes = ['5 Marla', '7 Marla', '10 Marla', '1 Kanal', '2 Kanal'];
         // You must define this array either in config or here
-        $featuresConfig = config('properties.features') ?? [];
+        $featuresConfig = [
+            'bedrooms'         => 'Bedrooms',
+            'bathrooms'        => 'Bathrooms',
+            'garage_capacity'  => 'Garage',
+            'drawing_rooms'    => 'Drawing Rooms',
+            'kitchens'         => 'Kitchens',
+            'study_rooms'      => 'Study Rooms',
+            'store_rooms'      => 'Store Rooms',
+            'servant_quarters' => 'Servant Quarters',
+            'sitting_rooms'    => 'Sitting Rooms',
+        ];
         return view('admin.properties.create', compact(
             'users', 'societies', 'subsectors', 'sizes', 'featuresConfig'
         ));
@@ -75,7 +87,7 @@ class PropertyController extends Controller
      * Store a newly created property.
      *
      * @param Request $request
-     * @return RedirectResponse
+     * @return JsonResponse|RedirectResponse
      * @throws Throwable
      */
     public function store(Request $request)
@@ -84,7 +96,7 @@ class PropertyController extends Controller
         $data = $request->validate([
             'user_id'             => 'required|exists:users,id',
             'society_id'          => 'required|exists:societies,id',
-            'subsector_id'        => 'nullable|exists:subsectors,id',
+            'sub_sector_id'       => 'nullable|exists:sub_sectors,id',
             'title'               => 'required|string|max:255',
             'slug'                => 'required|string|max:255|unique:properties,slug',
             'purpose'             => 'required|in:sale,rent',
@@ -116,7 +128,7 @@ class PropertyController extends Controller
             'main_image'          => 'nullable|image|max:2048',
             'gallery.*'           => 'nullable|image|max:2048',
         ]);
-
+        
         DB::beginTransaction();
 
         try {
@@ -145,8 +157,19 @@ class PropertyController extends Controller
             return redirect()
                 ->route('admin.properties.index')
                 ->with('success', 'Property created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
+            Log::error('PropertyController@store failed:', [
+                'error'   => $e->getMessage(),
+                'payload' => $data,
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Failed to create property.',
+                    'errors'  => ['server' => $e->getMessage()],
+                ], 500);
+            }
             return back()
                 ->withErrors(['error' => $e->getMessage()])
                 ->withInput();
@@ -175,7 +198,17 @@ class PropertyController extends Controller
         $users          = User::all();
         $societies      = Society::all();
         $subsectors     = SubSector::where('society_id', $property->society_id)->get();
-        $featuresConfig = config('properties.features');
+        $featuresConfig = [
+            'bedrooms'         => 'Bedrooms',
+            'bathrooms'        => 'Bathrooms',
+            'garage_capacity'  => 'Garage',
+            'drawing_rooms'    => 'Drawing Rooms',
+            'kitchens'         => 'Kitchens',
+            'study_rooms'      => 'Study Rooms',
+            'store_rooms'      => 'Store Rooms',
+            'servant_quarters' => 'Servant Quarters',
+            'sitting_rooms'    => 'Sitting Rooms',
+        ];
 
         return view('admin.properties.edit', compact(
             'property', 'users', 'societies', 'subsectors', 'featuresConfig'
@@ -195,7 +228,7 @@ class PropertyController extends Controller
         $data = $request->validate([
             'user_id'             => 'required|exists:users,id',
             'society_id'          => 'required|exists:societies,id',
-            'subsector_id'        => 'nullable|exists:subsectors,id',
+            'sub_sector_id'       => 'nullable|exists:sub_sectors,id',
             'title'               => 'required|string|max:255',
             'slug'                => 'required|string|max:255|unique:properties,slug,'.$property->id,
             'purpose'             => 'required|in:sale,rent',
@@ -279,37 +312,21 @@ class PropertyController extends Controller
     /**
      * Get all subsectors for a society.
      */
-    public function getSubsectors($society): JsonResponse
+    public function getSubsectors($societyId): JsonResponse
     {
-        $subs = SubSector::where('society_id', $society)
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        $subs = SubSector::where('society_id',$societyId)
+            ->select('id','name')->orderBy('name')->get();
         return response()->json($subs);
     }
 
     /**
      * Get all blocks for a subsector (or, if blocks are not a table, send back a unique list of block field).
      */
-    public function getBlocks($subsector): JsonResponse
+    public function getBlocks($subsectorId): JsonResponse
     {
-        $blocks = SubSector::where('id', $subsector)
-            ->pluck('block') // If you have a 'block' field
-            ->unique()
-            ->filter()
-            ->values();
-
-        // If you have a Blocks table:
-        // $blocks = Block::where('subsector_id', $subsector)->select('id', 'name')->orderBy('name')->get();
-
-        // Standardize response for frontend
-        $blockOptions = $blocks->map(function ($block, $key) {
-            return [
-                'id' => $key + 1, // or use block ID if using a Blocks table
-                'name' => $block,
-            ];
-        });
-
-        return response()->json($blockOptions);
+        $blocks = SubSector::where('id',$subsectorId)
+            ->pluck('block')->unique()->filter()->values()
+            ->map(fn($name,$i)=>['id'=>$i+1,'name'=>$name]);
+        return response()->json($blocks);
     }
 }
