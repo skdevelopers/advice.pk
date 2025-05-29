@@ -12,7 +12,7 @@
 
                 <ul class="tracking-[0.5px] inline-block sm:mt-0 mt-3">
                     <li class="inline-block capitalize text-[16px] font-medium duration-500 dark:text-white-100/70 hover:text-green-600 dark:hover:text-white">
-                        <a href="{{ route('admin.properties.create') }}">Add Property</a>
+                        <a href="{{ route('admin.properties.index') }}">All Properties</a>
                     </li>
                     <li class="inline-block text-base text-slate-950 dark:text-white-100/70 mx-0.5">
                         <i class="mdi mdi-chevron-right"></i>
@@ -423,8 +423,7 @@
 @push('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
-            // ensure CSRF for axios
-            axios.defaults.headers.common['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
+
 
             Alpine.data('propertyForm', () => ({
                 submitting: false,

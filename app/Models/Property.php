@@ -104,7 +104,7 @@ class Property extends Model implements HasMedia
     protected $fillable = [
         'user_id',
         'society_id',
-        'subsector_id',
+        'sub_sector_id',
         'title',
         'slug',
         'description',

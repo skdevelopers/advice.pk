@@ -10,7 +10,7 @@
             <li class="menu-title">Navigation</li>
 
             <li>
-                <a href="{{ url('admin') }}">
+                <a href="{{ url('admin/dashboard') }}">
                     <i class="mdi mdi-view-dashboard"></i> Dashboard
                 </a>
             </li>
@@ -82,7 +82,7 @@
                 <div class="sidebar-submenu">
                     <ul>
                         <li><a href="{{ url('admin/societies') }}">Add New Society Page</a></li>
-                        <li><a href="{{ url('admin/societies/create') }}">View Society Pages</a></li>
+                        <li><a href="{{ url('admin/societies/create') }}">View Societies</a></li>
                     </ul>
                 </div>
             </li>
@@ -93,8 +93,8 @@
                 </a>
                 <div class="sidebar-submenu">
                     <ul>
-                        <li><a href="{{ url('admin/properties') }}">Properties</a></li>
                         <li><a href="{{ url('admin/properties/create') }}">Add New Property</a></li>
+                        <li><a href="{{ url('admin/properties') }}">View Properties</a></li>
                     </ul>
                 </div>
             </li>

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PropertyRequest;
+use App\Http\Requests\StorePropertyRequest;
+use App\Http\Requests\UpdatePropertyRequest;
 use App\Models\Property;
 use App\Models\Society;
 use App\Models\SubSector;
@@ -47,12 +50,32 @@ class PropertyController extends Controller
     /**
      * Display a paginated list of properties.
      *
-     * @return View
+     * If the request expects JSON (e.g. via axios), returns
+     * a JSON payload with:
+     *  - data: array of properties (with relations: user, society, subsector)
+     *  - links: pagination links
+     *  - meta: pagination metadata
+     *
+     * Otherwise, renders the HTML view which will then
+     * bootstrap the axios fetch on the client side.
+     *
+     * @param  Request  $request
+     * @return View|JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        $properties = Property::with('user','society','subsector')->latest()->paginate(10);
-        return view('admin.properties.index', compact('properties'));
+        // eager-load relations and paginate 10 per page
+        $properties = Property::with(['user', 'society', 'subsector'])
+            ->latest()
+            ->paginate(10);
+
+        // JSON response for axios
+        if ($request->wantsJson()) {
+            return response()->json($properties);
+        }
+
+        // initial view (Blade will call axios to re-fetch)
+        return view('admin.properties.index');
     }
 
     /**
@@ -86,49 +109,15 @@ class PropertyController extends Controller
     /**
      * Store a newly created property.
      *
-     * @param Request $request
+     * @param StorePropertyRequest $request
      * @return JsonResponse|RedirectResponse
      * @throws Throwable
      */
-    public function store(Request $request)
+    public function store(StorePropertyRequest $request)
     {
         // 1️⃣ Validate all fields, including uploads and dynamic arrays
-        $data = $request->validate([
-            'user_id'             => 'required|exists:users,id',
-            'society_id'          => 'required|exists:societies,id',
-            'sub_sector_id'       => 'nullable|exists:sub_sectors,id',
-            'title'               => 'required|string|max:255',
-            'slug'                => 'required|string|max:255|unique:properties,slug',
-            'purpose'             => 'required|in:sale,rent',
-            'property_type'       => 'required|string|max:50',
-            'plot_size'           => 'nullable|string|max:100',
-            'plot_dimensions'     => 'nullable|string|max:100',
-            'price'               => 'nullable|numeric',
-            'rent'                => 'nullable|numeric',
-            'rent_type'           => 'nullable|in:monthly,yearly',
-            'plot_no'             => 'nullable|string|max:50',
-            'street'              => 'nullable|string|max:100',
-            'location'            => 'nullable|string|max:255',
-            'latitude'            => 'nullable|numeric',
-            'longitude'           => 'nullable|numeric',
-            'description'         => 'nullable|string',
-            'keywords'            => 'nullable|string',
-            'features'            => 'nullable|array',
-            'features.*'          => 'nullable|integer',
-            'nearby_facilities'   => 'nullable|array',
-            'installment_plan'    => 'nullable|array',
-            'best_selling'        => 'sometimes|boolean',
-            'today_deal'          => 'sometimes|boolean',
-            'approved'            => 'sometimes|boolean',
-            'status'              => 'required|in:enabled,disabled',
-            'map_embed'           => 'nullable|string',
-            'video_embed'         => 'nullable|string',
-            'short_video_url'     => 'nullable|string',
-            'extra_data'          => 'nullable|string',
-            'main_image'          => 'nullable|image|max:2048',
-            'gallery.*'           => 'nullable|image|max:2048',
-        ]);
-        
+        $data = $request->validated();
+
         DB::beginTransaction();
 
         try {
@@ -177,17 +166,6 @@ class PropertyController extends Controller
     }
 
     /**
-     * Display the specified property.
-     *
-     * @param  Property  $property
-     * @return View
-     */
-    public function show(Property $property)
-    {
-        return view('admin.properties.show', compact('property'));
-    }
-
-    /**
      * Show the form for editing the specified property.
      *
      * @param  Property  $property
@@ -218,48 +196,14 @@ class PropertyController extends Controller
     /**
      * Update the specified property.
      *
-     * @param Request $request
+     * @param UpdatePropertyRequest $request
      * @param Property $property
      * @return RedirectResponse
      * @throws ConnectionException
      */
-    public function update(Request $request, Property $property)
+    public function update(UpdatePropertyRequest $request, Property $property)
     {
-        $data = $request->validate([
-            'user_id'             => 'required|exists:users,id',
-            'society_id'          => 'required|exists:societies,id',
-            'sub_sector_id'       => 'nullable|exists:sub_sectors,id',
-            'title'               => 'required|string|max:255',
-            'slug'                => 'required|string|max:255|unique:properties,slug,'.$property->id,
-            'purpose'             => 'required|in:sale,rent',
-            'property_type'       => 'required|string|max:50',
-            'plot_size'           => 'nullable|string|max:100',
-            'plot_dimensions'     => 'nullable|string|max:100',
-            'price'               => 'nullable|numeric',
-            'rent'                => 'nullable|numeric',
-            'rent_type'           => 'nullable|in:monthly,yearly',
-            'plot_no'             => 'nullable|string|max:50',
-            'street'              => 'nullable|string|max:100',
-            'location'            => 'nullable|string|max:255',
-            'latitude'            => 'nullable|numeric',
-            'longitude'           => 'nullable|numeric',
-            'description'         => 'nullable|string',
-            'keywords'            => 'nullable|string',
-            'features'            => 'nullable|array',
-            'features.*'          => 'nullable|integer',
-            'nearby_facilities'   => 'nullable|array',
-            'installment_plan'    => 'nullable|array',
-            'best_selling'        => 'sometimes|boolean',
-            'today_deal'          => 'sometimes|boolean',
-            'approved'            => 'sometimes|boolean',
-            'status'              => 'required|in:enabled,disabled',
-            'map_embed'           => 'nullable|string',
-            'video_embed'         => 'nullable|string',
-            'short_video_url'     => 'nullable|string',
-            'extra_data'          => 'nullable|string',
-            'main_image'          => 'nullable|image|max:2048',
-            'gallery.*'           => 'nullable|image|max:2048',
-        ]);
+        $data = $request->validated();
 
         // Regenerate SEO keywords
         $seo = $this->aiService->generate($data['title'], $data['location'] ?? '');
@@ -294,6 +238,17 @@ class PropertyController extends Controller
         return redirect()
             ->route('admin.properties.index')
             ->with('success', 'Property updated successfully.');
+    }
+
+    /**
+     * Display the specified property.
+     *
+     * @param  Property  $property
+     * @return View
+     */
+    public function show(Property $property)
+    {
+        return view('admin.properties.show', compact('property'));
     }
 
     /**
