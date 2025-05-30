@@ -6,7 +6,14 @@
 @section('content')
     <div class="container-fluid relative px-3">
         <div class="layout-specing">
-
+            @if(session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // fire it once
+                        window.showToast(@json(session('success')), 'success');
+                    });
+                </script>
+            @endif
             <!-- Page Header -->
             <div class="md:flex justify-between items-center">
                 <h5 class="text-lg font-semibold">Explore Properties</h5>
@@ -80,14 +87,14 @@
                         links.forEach(link => {
                             if (!link.url) return;
                             paginationEl.insertAdjacentHTML('beforeend', `
-            <a href="#" data-url="${link.url}"
-               class="mx-1 mb-2 px-3 py-1 border rounded ${
-                                link.active ? 'bg-green-600 text-white'
-                                    : 'bg-white text-gray-800'
-                            }">
-              ${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}
-            </a>
-          `);
+                            <a href="#" data-url="${link.url}"
+                               class="mx-1 mb-2 px-3 py-1 border rounded ${
+                                                link.active ? 'bg-green-600 text-white'
+                                                    : 'bg-white text-gray-800'
+                                            }">
+                              ${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}
+                            </a>
+                          `);
                         });
 
                         // hook pagination clicks
@@ -105,8 +112,7 @@
             }
 
             function renderPropertyCard(p) {
-                const img = p.main_image_url
-                    || "{{ asset('/assets/admin/images/hero.jpg') }}";
+                const img = p.property_image_url;
 
                 return `
                         <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl overflow-hidden duration-500">

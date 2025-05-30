@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PropertyRequest;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
+use App\Http\Resources\PropertyResource;
 use App\Models\Property;
 use App\Models\Society;
 use App\Models\SubSector;
@@ -64,17 +65,17 @@ class PropertyController extends Controller
      */
     public function index(Request $request)
     {
-        // eager-load relations and paginate 10 per page
-        $properties = Property::with(['user', 'society', 'subsector'])
+        $properties = Property::with(['user','society','subsector'])
             ->latest()
             ->paginate(10);
 
-        // JSON response for axios
         if ($request->wantsJson()) {
-            return response()->json($properties);
+            // wrap the *paginated* collection
+            return PropertyResource::collection($properties)
+                ->response()
+                ->setStatusCode(200);
         }
 
-        // initial view (Blade will call axios to re-fetch)
         return view('admin.properties.index');
     }
 
@@ -129,10 +130,10 @@ class PropertyController extends Controller
             $property = Property::create($data);
 
             // 4️⃣ Media uploads
-            if ($request->hasFile('main_image')) {
+            if ($request->hasFile('property_image')) {
                 $property
-                    ->addMediaFromRequest('main_image')
-                    ->toMediaCollection('main_image');
+                    ->addMediaFromRequest('property_image')
+                    ->toMediaCollection('property_image');
             }
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $img) {
@@ -211,12 +212,12 @@ class PropertyController extends Controller
 
         $property->update($data);
 
-        if ($request->hasFile('main_image')) {
-            $property->clearMediaCollection('main_image');
+        if ($request->hasFile('property_image')) {
+            $property->clearMediaCollection('property_image');
             try {
                 $property
-                    ->addMediaFromRequest('main_image')
-                    ->toMediaCollection('main_image');
+                    ->addMediaFromRequest('property_image')
+                    ->toMediaCollection('property_image');
             } catch (FileDoesNotExist|FileIsTooBig $e) {
 
             }

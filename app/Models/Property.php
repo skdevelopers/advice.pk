@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Class Property
@@ -147,6 +148,18 @@ class Property extends Model implements HasMedia
         'longitude' => 'float',
     ];
 
+    // 1) tell Eloquent to include this in toArray()/toJson()
+    protected $appends = ['property_image_url'];
+
+    /**
+     * Return the first “property_image” or a placeholder.
+     */
+    public function getPropertyImageUrlAttribute(): string
+    {
+        $url = $this->getFirstMediaUrl('property_image');
+        return $url ?: asset('/assets/admin/images/hero.jpg');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -162,17 +175,27 @@ class Property extends Model implements HasMedia
         return $this->belongsTo(SubSector::class);
     }
     /**
-     * Register media collections for the property.
+     * (Optional) Add a custom “thumb” conversion if you need one in addition
+     * to responsive images. Otherwise, you can omit this method.
      *
-     * - Main_image: Single featured image
-     * - gallery: Multiple images of the property
-     * - documents: Legal or layout files
+     * @param  Media|null  $media
+     * @return void
      */
-    public function registerMediaCollections(): void
+    public function registerMediaCollections(?Media $media = null): void
     {
-        $this->addMediaCollection('main_image')->singleFile();
-        $this->addMediaCollection('gallery');
-        $this->addMediaCollection('documents');
+        $this
+            ->addMediaCollection('property_image')
+            ->singleFile()
+            ->withResponsiveImages();
+
+        $this
+            ->addMediaCollection('gallery')
+            // remove singleFile so it stays multiple,
+            ->withResponsiveImages();
+
+        $this
+            ->addMediaCollection('documents')
+            ->withResponsiveImages();
     }
 
 }

@@ -368,21 +368,8 @@
                             </div>
                         </div>
 
-                        {{-- MAIN IMAGE --}}
-                        <div x-data="{
-                                preview: null,
-                                handleFileUpload(event) {
-                                    const file = event.target.files[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = e => this.preview = e.target.result;
-                                        reader.readAsDataURL(file);
-                                    } else {
-                                        this.preview = null;
-                                    }
-                                }
-                            }"
-                        >
+                        {{-- MAIN IMAGE / Property Image --}}
+                        <div>
                             <p class="font-medium mb-4">Upload your main property image here</p>
                             <div class="preview-box flex justify-center items-center rounded-md shadow-sm dark:shadow-gray-800 overflow-hidden bg-gray-50 dark:bg-slate-800 text-slate-400 p-2 text-center w-full h-60">
                                 <template x-if="preview">
@@ -392,14 +379,19 @@
                                     <span>Supports JPG, PNG, WEBP. Max file size: 1MB.</span>
                                 </template>
                             </div>
-                            <input type="file" id="main_image" name="main_image" class="hidden"
+
+                            <input type="file"
+                                   id="property_image"
+                                   name="property_image"
+                                   class="hidden"
                                    accept=".jpg,.jpeg,.webp,.png"
-                                   @change="handleFileUpload">
-                            <label for="main_image"
+                                   @change="handleFileUpload($event)">
+
+                            <label for="property_image"
                                    class="btn-upload bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 text-white rounded-md mt-4 px-4 py-2 inline-block cursor-pointer">
                                 Upload Image
                             </label>
-                            <p class="text-red-600" x-text="errors.main_image" x-show="errors.main_image"></p>
+                            <p class="text-red-600" x-text="errors.property_image" x-show="errors.property_image"></p>
                         </div>
 
                         {{-- Submit --}}
@@ -427,6 +419,7 @@
 
             Alpine.data('propertyForm', () => ({
                 submitting: false,
+                preview: null,
                 form: {
                     user_id: {{ auth()->check() ? auth()->id() : 1 }},
                     created_by: '{{ auth()->check() ? auth()->user()->name : "Abdul Hadi" }}',
@@ -458,7 +451,7 @@
                     best_selling: false, today_deal: false, mail_send: false,
                     longitude: '', latitude: '',
                     status: 'enabled',
-                    main_image: ''
+                    property_image: ''
                 },
                 errors: {},
                 subsectors: [],         // <-- real data will fill this
@@ -492,7 +485,16 @@
                 ],
 
                 handleFileUpload(event) {
-                    this.form.main_image = event.target.files[0] || null;
+                    const file = event.target.files[0] || null;
+                    this.form.property_image = file;
+
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = e => this.preview = e.target.result;
+                        reader.readAsDataURL(file);
+                    } else {
+                        this.preview = null;
+                    }
                 },
 
                 async loadSubsectors() {
@@ -560,43 +562,32 @@
 
                 async submitForm() {
                     this.submitting = true;
-                    this.errors    = {};
+                    this.errors = {};
 
-                    let data = new FormData();
-
-                    for (let key in this.form) {
-                        // skip main_image when not selected
-                        if (key === 'main_image') {
-                            if (this.form.main_image instanceof File) {
-                                data.append('main_image', this.form.main_image);
-                            }
-                            continue;
-                        }
-
-                        // normalize booleans to 0/1
-                        if (['best_selling','today_deal','mail_send'].includes(key)) {
-                            data.append(key, this.form[key] ? 1 : 0);
+                    const data = new FormData();
+                    Object.entries(this.form).forEach(([key, val]) => {
+                        if (key === 'property_image') {
+                            if (val instanceof File) data.append(key, val);
+                        } else if (['best_selling','today_deal','mail_send'].includes(key)) {
+                            data.append(key, val ? 1 : 0);
                         } else {
-                            data.append(key, this.form[key]);
+                            data.append(key, val);
                         }
-                    }
-
+                    });
 
                     try {
-                        let res = await axios.post('{{ route("admin.properties.store") }}', data, {
-                            headers: {'Content-Type': 'multipart/form-data'}
+                        const res = await axios.post('{{ route("admin.properties.store") }}', data, {
+                            headers: { 'Content-Type': 'multipart/form-data' }
                         });
-                        showToast(res.data.message || 'Property created!', 'success');
-                        setTimeout(() => location.reload(), 1200);
+                        // no toast here—let the next page handle it
+                        window.location.href = '{{ route("admin.properties.index") }}';
                     } catch (err) {
-                        if (err.response?.data?.errors) {
-                            this.errors = err.response.data.errors;
-                        } else {
-                            showToast('Something went wrong.', 'error');
-                        }
+                        this.errors = err.response?.data?.errors || {};
+                        showToast('Something went wrong.', 'error');
                     } finally {
                         this.submitting = false;
                     }
+
                 }
             }));
         });

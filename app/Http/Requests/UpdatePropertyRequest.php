@@ -48,7 +48,7 @@ class UpdatePropertyRequest extends FormRequest
             'video_embed'       => 'nullable|string',
             'short_video_url'   => 'nullable|string',
             'extra_data'        => 'nullable|string',
-            'main_image'        => 'nullable|image|max:2048',
+            'property_image'    => 'nullable|image|max:2048',
             'gallery.*'         => 'nullable|image|max:2048',
         ];
     }
