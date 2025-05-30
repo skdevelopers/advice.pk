@@ -56,124 +56,117 @@
             const listEl       = document.getElementById('property-list');
             const noDataEl     = document.getElementById('no-properties');
             const paginationEl = document.getElementById('pagination');
-            const alertWrapper = document.getElementById('alert-wrapper');
 
-            // initial fetch
+            // Kick off the first load
             fetchProperties("{{ route('admin.properties.index') }}");
 
-            /**
-             * Fetch via axios and render cards + pagination.
-             * @param {string} url
-             */
-            function fetchProperties(url) {
-                axios.get(url, { headers: { Accept: 'application/json' } })
-                    .then(({ data }) => {
-                        const props = data.data || [];
-                        const links = data.links || [];
-
-                        listEl.innerHTML       = '';
-                        paginationEl.innerHTML = '';
-
-                        if (props.length === 0) {
-                            noDataEl.classList.remove('hidden');
-                            return;
+            async function fetchProperties(url) {
+                try {
+                    const res = await axios.get(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept':           'application/json'
                         }
-                        noDataEl.classList.add('hidden');
-
-                        // render each card
-                        props.forEach(p => listEl.insertAdjacentHTML('beforeend', renderPropertyCard(p)));
-
-                        // render pagination
-                        links.forEach(link => {
-                            if (!link.url) return;
-                            paginationEl.insertAdjacentHTML('beforeend', `
-                            <a href="#" data-url="${link.url}"
-                               class="mx-1 mb-2 px-3 py-1 border rounded ${
-                                                link.active ? 'bg-green-600 text-white'
-                                                    : 'bg-white text-gray-800'
-                                            }">
-                              ${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}
-                            </a>
-                          `);
-                        });
-
-                        // hook pagination clicks
-                        paginationEl.querySelectorAll('a').forEach(a => {
-                            a.addEventListener('click', e => {
-                                e.preventDefault();
-                                fetchProperties(a.dataset.url);
-                            });
-                        });
-                    })
-                    .catch(() => {
-                        showToast('Failed to load properties. Please try again later.', 'error');
-                        noDataEl.classList.remove('hidden');
                     });
+
+                    const props = res.data.data  || [];
+                    const links = res.data.links || [];
+
+                    listEl.innerHTML       = '';
+                    paginationEl.innerHTML = '';
+
+                    if (!props.length) {
+                        noDataEl.classList.remove('hidden');
+                        return;
+                    }
+                    noDataEl.classList.add('hidden');
+
+                    props.forEach(p => {
+                        listEl.insertAdjacentHTML('beforeend', renderCard(p));
+                    });
+
+                    links.forEach(l => {
+                        if (!l.url) return;
+                        paginationEl.insertAdjacentHTML('beforeend', `
+          <a href="#" data-url="${l.url}"
+             class="mx-1 mb-2 px-3 py-1 border rounded ${
+                            l.active ? 'bg-green-600 text-white' : 'bg-white text-gray-800'
+                        }">
+            ${l.label.replace('&laquo;', '«').replace('&raquo;', '»')}
+          </a>
+        `);
+                    });
+
+                    paginationEl.querySelectorAll('a').forEach(a => {
+                        a.addEventListener('click', e => {
+                            e.preventDefault();
+                            fetchProperties(a.dataset.url);
+                        });
+                    });
+
+                } catch {
+                    showToast('Failed to load properties.', 'error');
+                    noDataEl.classList.remove('hidden');
+                }
             }
 
-            function renderPropertyCard(p) {
-                const img = p.property_image_url;
+            function renderCard(p) {
+                // fallback if no media
+                const fallback = p.property_image_url
+                    || "{{ asset('assets/admin/images/hero.jpg') }}";
+
+                // build srcset from the responsive URLs your Resource returned
+                const resp = p.property_image_responsive || {};
+                const srcset = Object.entries(resp)
+                    .map(([w, u]) => `${u} ${w}w`)
+                    .join(', ');
+                const sizes = '(max-width: 640px) 100vw, 640px';
 
                 return `
-                        <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl overflow-hidden duration-500">
-                          <div class="relative">
-                            <img src="${img}" alt="${p.title}" class="w-full h-48 object-cover">
-                            <div class="absolute top-4 end-4">
-                              <a href="#" class="btn btn-icon bg-white dark:bg-slate-900 !rounded-full text-slate-100 dark:text-slate-700 hover:text-red-600">
-                                <i class="mdi mdi-heart text-[20px]"></i>
-                              </a>
-                            </div>
-                          </div>
-                          <div class="p-6">
-                            <div class="pb-6">
-                              <a href="/admin/properties/${p.id}" class="text-lg font-medium hover:text-green-600">
-                                ${p.title}
-                              </a>
-                            </div>
-                            <ul class="py-6 border-y border-slate-100 dark:border-gray-800 flex items-center list-none">
-                              <li class="flex items-center me-4">
-                                <i class="mdi mdi-arrow-expand-all text-2xl me-2 text-green-600"></i>
-                                <span>${p.plot_size || '--'} </span>
-                              </li>
-                              <li class="flex items-center me-4">
-                                <i class="mdi mdi-bed text-2xl me-2 text-green-600"></i>
-                                <span>${p.features?.bedrooms || 0} Beds</span>
-                              </li>
-                              <li class="flex items-center">
-                                <i class="mdi mdi-shower text-2xl me-2 text-green-600"></i>
-                                <span>${p.features?.bathrooms || 0} Baths</span>
-                              </li>
-                            </ul>
-                            <ul class="pt-6 flex justify-between items-center list-none">
-                              <li>
-                                <span class="text-slate-400">Price</span>
-                                <p class="text-lg font-medium">
-                                  PKR ${Number(p.price || 0).toLocaleString()}
-                                </p>
-                              </li>
-                              <li>
-                                <span class="text-slate-400">Rating</span>
-                                <ul class="text-amber-400 list-none">
-                                  ${renderStars(p.rating || 0)}
-                                  <li class="inline text-black dark:text-white">
-                                    ${(p.rating||0).toFixed(1)} (${p.reviews_count||0})
-                                  </li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </div>
-                        </div>`;
+      <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl overflow-hidden duration-500">
+        <div class="relative">
+          <img
+            src="${fallback}"
+            ${srcset ? `srcset="${srcset}" sizes="${sizes}"` : ''}
+            loading="lazy"
+            class="w-full h-48 object-cover"
+            alt="${p.title}"
+          >
+          <div class="absolute top-4 right-4">
+            <a href="#" class="btn btn-icon bg-white dark:bg-slate-900 rounded-full hover:text-red-600">
+              <i class="mdi mdi-heart text-[20px]"></i>
+            </a>
+          </div>
+        </div>
+        <div class="p-6">
+          <h3><a href="/admin/properties/${p.id}" class="text-lg font-medium hover:text-green-600">
+            ${p.title}
+          </a></h3>
+          <ul class="py-4 flex space-x-4 text-sm text-gray-600">
+            <li>Size: ${p.plot_size || '--'}</li>
+            <li>Beds: ${p.features?.bedrooms || 0}</li>
+            <li>Baths: ${p.features?.bathrooms || 0}</li>
+          </ul>
+          <div class="flex justify-between items-center mt-4">
+            <span class="font-semibold">PKR ${Number(p.price||0).toLocaleString()}</span>
+            <span>${renderStars(p.rating||0)} ${(p.rating||0).toFixed(1)}</span>
+          </div>
+        </div>
+      </div>
+    `;
             }
 
-            function renderStars(rating) {
-                let stars = '';
+            function renderStars(r) {
+                let out = '';
                 for (let i = 0; i < 5; i++) {
-                    stars += `<li class="inline">
-                  <i class="mdi mdi-star${i < rating ? '' : '-outline'}"></i>
-                </li>`;
+                    out += `<i class="mdi mdi-star${i<r?'':'-outline'}"></i>`;
                 }
-                return stars;
+                return `<span class="text-amber-400">${out}</span>`;
             }
         });
     </script>
 @endpush
+
+
+
+
