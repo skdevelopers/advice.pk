@@ -9,7 +9,7 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('admin.starter');
+    return view('front.home');
 });
 
 Route::post('/auth/login', [AuthController::class, 'login']);

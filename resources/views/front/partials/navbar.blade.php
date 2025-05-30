@@ -1,8 +1,8 @@
 <nav id="topnav" class="defaultscroll is-sticky">
     <div class="container relative flex justify-between items-center">
         <a class="logo" href="{{ url('/') }}">
-            <img src="{{ asset('assets/images/logo-dark.png') }}" class="inline-block dark:hidden" alt="Logo">
-            <img src="{{ asset('assets/images/logo-light.png') }}" class="hidden dark:inline-block" alt="Logo">
+            <img src="{{ asset('assets/front/images/logo-dark.png') }}" class="inline-block dark:hidden" alt="Logo">
+            <img src="{{ asset('assets/front/images/logo-light.png') }}" class="hidden dark:inline-block" alt="Logo">
         </a>
         <div class="flex items-center">
             <a href="{{ route('login') }}" class="btn btn-icon bg-green-600 text-white !rounded-full mr-2">

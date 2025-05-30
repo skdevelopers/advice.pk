@@ -1,7 +1,7 @@
 <footer class="relative bg-slate-900 dark:bg-slate-800 mt-24">
     <div class="container py-16 text-center text-gray-300">
         <div class="mb-6">
-            <img src="{{ asset('assets/images/logo-light.png') }}" class="mx-auto" alt="Logo">
+            <img src="{{ asset('assets/front/images/logo-light.png') }}" class="mx-auto" alt="Logo">
         </div>
         <p class="mb-6">A great platform to buy, sell and rent your properties without any agent or commissions.</p>
         <div class="space-x-4">

@@ -123,37 +123,37 @@
                 const sizes = '(max-width: 640px) 100vw, 640px';
 
                 return `
-      <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl overflow-hidden duration-500">
-        <div class="relative">
-          <img
-            src="${fallback}"
-            ${srcset ? `srcset="${srcset}" sizes="${sizes}"` : ''}
-            loading="lazy"
-            class="w-full h-48 object-cover"
-            alt="${p.title}"
-          >
-          <div class="absolute top-4 right-4">
-            <a href="#" class="btn btn-icon bg-white dark:bg-slate-900 rounded-full hover:text-red-600">
-              <i class="mdi mdi-heart text-[20px]"></i>
-            </a>
-          </div>
-        </div>
-        <div class="p-6">
-          <h3><a href="/admin/properties/${p.id}" class="text-lg font-medium hover:text-green-600">
-            ${p.title}
-          </a></h3>
-          <ul class="py-4 flex space-x-4 text-sm text-gray-600">
-            <li>Size: ${p.plot_size || '--'}</li>
-            <li>Beds: ${p.features?.bedrooms || 0}</li>
-            <li>Baths: ${p.features?.bathrooms || 0}</li>
-          </ul>
-          <div class="flex justify-between items-center mt-4">
-            <span class="font-semibold">PKR ${Number(p.price||0).toLocaleString()}</span>
-            <span>${renderStars(p.rating||0)} ${(p.rating||0).toFixed(1)}</span>
-          </div>
-        </div>
-      </div>
-    `;
+                      <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl overflow-hidden duration-500">
+                        <div class="relative">
+                          <img
+                            src="${fallback}"
+                            ${srcset ? `srcset="${srcset}" sizes="${sizes}"` : ''}
+                            loading="lazy"
+                            class="w-full h-48 object-cover"
+                            alt="${p.title}"
+                          >
+                          <div class="absolute top-4 right-4">
+                            <a href="#" class="btn btn-icon bg-white dark:bg-slate-900 rounded-full hover:text-red-600">
+                              <i class="mdi mdi-heart text-[20px]"></i>
+                            </a>
+                          </div>
+                        </div>
+                        <div class="p-6">
+                          <h3><a href="/admin/properties/${p.id}" class="text-lg font-medium hover:text-green-600">
+                            ${p.title}
+                          </a></h3>
+                          <ul class="py-4 flex space-x-4 text-sm text-gray-600">
+                            <li>Size: ${p.plot_size || '--'}</li>
+                            <li>Beds: ${p.features?.bedrooms || 0}</li>
+                            <li>Baths: ${p.features?.bathrooms || 0}</li>
+                          </ul>
+                          <div class="flex justify-between items-center mt-4">
+                            <span class="font-semibold">PKR ${Number(p.price||0).toLocaleString()}</span>
+                            <span>${renderStars(p.rating||0)} ${(p.rating||0).toFixed(1)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
             }
 
             function renderStars(r) {
