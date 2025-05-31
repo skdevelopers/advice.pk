@@ -3,6 +3,7 @@
 @section('content')
     @include('front.partials.hero')
     @include('front.partials.property-tabs')
+    @include('front.partials.property-categories')
     @include('front.partials.featured-properties')
 @endsection
 
