@@ -9,6 +9,7 @@ use App\Models\SubSector;
 use App\Services\AiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;

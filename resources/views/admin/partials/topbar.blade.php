@@ -8,16 +8,16 @@
             <!-- Responsive Logo: Visible on mobile/tablet (xl:hidden) -->
             <a href="#" class="xl:hidden block me-2">
                 <!-- Mobile Logo Icon -->
-                <img src="{{ asset('assets/front/admin/images/logo-icon-32.png') }}"
+                <img src="{{ asset('assets/admin/images/logo-icon-32.png') }}"
                      class="md:hidden block"
                      alt="Advice Logo">
 
                 <!-- Desktop Logos (Dark/Light Mode Variants) -->
                 <span class="md:block hidden">
-                    <img src="{{ asset('assets/front/admin/images/logo-dark.png') }}"
+                    <img src="{{ asset('assets/admin/images/logo-dark.png') }}"
                          class="inline-block dark:hidden"
                          alt="Dark Mode Logo">
-                    <img src="{{ asset('assets/front/admin/images/logo-light.png') }}"
+                    <img src="{{ asset('assets/admin/images/logo-light.png') }}"
                          class="hidden dark:inline-block"
                          alt="Light Mode Logo">
                 </span>

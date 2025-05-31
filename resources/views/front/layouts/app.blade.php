@@ -7,7 +7,8 @@
     <meta name="description" content="Advice Associates Real Estate AI CRM"  />
     <meta name="author" content="Salman@advice.pk" />
     <link rel="icon" href="{{ asset('assets/front/images/favicon.ico') }}" />
-
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Vite CSS & JS --}}
 
     <link rel="stylesheet" href="{{ asset('assets/front/libs/tiny-slider/tiny-slider.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/libs/tobii/css/tobii.min.css') }}">
@@ -28,6 +29,11 @@
 
 {{-- Footer --}}
 @include('front.partials.footer')
+
+{{-- Alpine.js (MUST load before any Alpine code runs) --}}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{{-- Axios --}}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 {{-- Global JS, --}}
 <script src="{{ asset('assets/front/libs/tiny-slider/min/tiny-slider.js') }}"></script>
