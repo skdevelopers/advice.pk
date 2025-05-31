@@ -8,6 +8,11 @@
 
 @push('scripts')
     <script>
+        function propertyTabs() {
+            return {
+                tab: 'buy'
+            }
+        }
         function propertySearch(type) {
             return {
                 search: { keyword: '', category: '', min_price: '', max_price: '', type },
@@ -24,11 +29,6 @@
                 }
             }
         }
-
-        function propertyTabs() {
-            return { tab: 'buy' }
-        }
-
         function featuredProperties() {
             return {
                 properties: [],
@@ -36,13 +36,19 @@
                 fetch() {
                     this.loading = true;
                     axios.get('/api/properties/featured')
-                        .then(res => { this.properties = res.data.data || []; })
-                        .catch(() => { this.properties = []; })
-                        .finally(() => { this.loading = false; });
+                        .then(res => {
+                            this.properties = res.data.data || [];
+                        })
+                        .catch(() => {
+                            this.properties = [];
+                        })
+                        .finally(() => {
+                            this.loading = false;
+                        });
                 }
             }
         }
-
     </script>
+
 @endpush
 
