@@ -13,12 +13,27 @@
                 tab: 'buy'
             }
         }
-        function propertySearch(tab) {
+        function propertySearch(type) {
             return {
-                search: { keyword: '', category: '', min_price: '', max_price: '', purpose: tab }, // use 'purpose'
-                results: [],
+                search: { keyword: '', category: '', min_price: '', max_price: '', type: type },
+                options: { categories: [], min_prices: [], max_prices: [] },
                 loading: false,
+                results: [],
                 searched: false,
+                loadOptions() {
+                    axios.get('/api/properties/options')
+                        .then(res => {
+                            this.options = res.data;
+                            this.$nextTick(() => {
+                                // Choices.js - re-initialize for dynamically rendered selects
+                                if (window.Choices) {
+                                    if (this.$refs.category) new Choices(this.$refs.category, { searchEnabled: false, itemSelectText: '' });
+                                    if (this.$refs.minPrice) new Choices(this.$refs.minPrice, { searchEnabled: false, itemSelectText: '' });
+                                    if (this.$refs.maxPrice) new Choices(this.$refs.maxPrice, { searchEnabled: false, itemSelectText: '' });
+                                }
+                            });
+                        });
+                },
                 searchProperties() {
                     this.loading = true;
                     this.searched = true;
@@ -29,6 +44,7 @@
                 }
             }
         }
+
         function featuredProperties() {
             return {
                 properties: [],

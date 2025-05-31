@@ -31,6 +31,45 @@ class FrontPropertyController extends Controller
     }
 
     /**
+     * Get static property search options (categories, price ranges, etc).
+     *
+     * @return JsonResponse
+     */
+    public function searchOptions(): JsonResponse
+    {
+        return response()->json([
+            'categories' => [
+                ['label' => 'All Categories', 'value' => ''],
+                ['label' => 'Houses', 'value' => 'Houses'],
+                ['label' => 'Apartment', 'value' => 'Apartment'],
+                ['label' => 'Offices', 'value' => 'Offices'],
+                ['label' => 'Townhome', 'value' => 'Townhome'],
+            ],
+            'min_prices' => [
+                ['label' => 'Min Price', 'value' => ''],
+                ['label' => '500', 'value' => '500'],
+                ['label' => '1000', 'value' => '1000'],
+                ['label' => '2000', 'value' => '2000'],
+                ['label' => '3000', 'value' => '3000'],
+                ['label' => '4000', 'value' => '4000'],
+                ['label' => '5000', 'value' => '5000'],
+                ['label' => '6000', 'value' => '6000'],
+            ],
+            'max_prices' => [
+                ['label' => 'Max Price', 'value' => ''],
+                ['label' => '500', 'value' => '500'],
+                ['label' => '1000', 'value' => '1000'],
+                ['label' => '2000', 'value' => '2000'],
+                ['label' => '3000', 'value' => '3000'],
+                ['label' => '4000', 'value' => '4000'],
+                ['label' => '5000', 'value' => '5000'],
+                ['label' => '6000', 'value' => '6000'],
+            ],
+        ]);
+    }
+
+
+    /**
      * Search properties by filter.
      *
      * @param Request $request
@@ -78,8 +117,11 @@ class FrontPropertyController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
-        $property = Property::with(['media', 'society', 'user'])->where('slug', $slug)
-            ->where('approved', true)->where('status', 'active')->firstOrFail();
+        $property = Property::with(['media', 'society', 'user'])
+            ->where('slug', $slug)
+            ->where('approved', true)
+            ->where('status', 'active')
+            ->firstOrFail();
 
         return response()->json(['data' => $this->transform($property, true)]);
     }
