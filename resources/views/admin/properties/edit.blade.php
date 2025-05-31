@@ -14,15 +14,15 @@
             {{-- Images preview and upload --}}
             <div class="grid md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium">Current Main Image</label>
-                    <img src="{{ $property->getFirstMediaUrl('main_image')
+                    <label class="block text-sm font-medium">Current Property Image</label>
+                    <img src="{{ $property->getFirstMediaUrl('property_image')
                     ?: asset('images/defaults/property-placeholder.jpg') }}"
-                         class="w-full h-40 object-cover rounded">
+                         class="w-full h-40 object-cover rounded" alt="Advice Property Image">
                 </div>
                 <div>
                     <label class="block text-sm font-medium">Replace Main Image</label>
-                    <input type="file" name="main_image" class="w-full border rounded px-3 py-2">
-                    @error('main_image')<p class="text-red-600">{{ $message }}</p>@enderror
+                    <input type="file" name="property_image" class="w-full border rounded px-3 py-2">
+                    @error('property_image')<p class="text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 

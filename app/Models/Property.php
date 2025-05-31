@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -49,54 +52,54 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \App\Models\Society $society
- * @property-read \App\Models\SubSector|null $subsector
- * @property-read \App\Models\User $user
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereApproved($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereBestSelling($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereCreatedBy($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereExtraData($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereFeatures($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereInstallmentPlan($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereKeywords($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereLatitude($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereLocation($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereLongitude($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereMapEmbed($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereNearbyFacilities($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property wherePlotDimensions($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property wherePlotNo($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property wherePlotSize($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property wherePrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property wherePropertyType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property wherePurpose($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereRent($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereRentType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereShortVideoUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereSlug($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereSocietyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereStreet($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereSubSectorId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereTodayDeal($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereVideoEmbed($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property whereViews($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Property withoutTrashed()
- * @mixin \Eloquent
+ * @property-read Society $society
+ * @property-read SubSector|null $subsector
+ * @property-read User $user
+ * @method static Builder<static>|Property newModelQuery()
+ * @method static Builder<static>|Property newQuery()
+ * @method static Builder<static>|Property onlyTrashed()
+ * @method static Builder<static>|Property query()
+ * @method static Builder<static>|Property whereApproved($value)
+ * @method static Builder<static>|Property whereBestSelling($value)
+ * @method static Builder<static>|Property whereCreatedAt($value)
+ * @method static Builder<static>|Property whereCreatedBy($value)
+ * @method static Builder<static>|Property whereDeletedAt($value)
+ * @method static Builder<static>|Property whereDescription($value)
+ * @method static Builder<static>|Property whereExtraData($value)
+ * @method static Builder<static>|Property whereFeatures($value)
+ * @method static Builder<static>|Property whereId($value)
+ * @method static Builder<static>|Property whereInstallmentPlan($value)
+ * @method static Builder<static>|Property whereKeywords($value)
+ * @method static Builder<static>|Property whereLatitude($value)
+ * @method static Builder<static>|Property whereLocation($value)
+ * @method static Builder<static>|Property whereLongitude($value)
+ * @method static Builder<static>|Property whereMapEmbed($value)
+ * @method static Builder<static>|Property whereNearbyFacilities($value)
+ * @method static Builder<static>|Property wherePlotDimensions($value)
+ * @method static Builder<static>|Property wherePlotNo($value)
+ * @method static Builder<static>|Property wherePlotSize($value)
+ * @method static Builder<static>|Property wherePrice($value)
+ * @method static Builder<static>|Property wherePropertyType($value)
+ * @method static Builder<static>|Property wherePurpose($value)
+ * @method static Builder<static>|Property whereRent($value)
+ * @method static Builder<static>|Property whereRentType($value)
+ * @method static Builder<static>|Property whereShortVideoUrl($value)
+ * @method static Builder<static>|Property whereSlug($value)
+ * @method static Builder<static>|Property whereSocietyId($value)
+ * @method static Builder<static>|Property whereStatus($value)
+ * @method static Builder<static>|Property whereStreet($value)
+ * @method static Builder<static>|Property whereSubSectorId($value)
+ * @method static Builder<static>|Property whereTitle($value)
+ * @method static Builder<static>|Property whereTodayDeal($value)
+ * @method static Builder<static>|Property whereUpdatedAt($value)
+ * @method static Builder<static>|Property whereUserId($value)
+ * @method static Builder<static>|Property whereVideoEmbed($value)
+ * @method static Builder<static>|Property whereViews($value)
+ * @method static Builder<static>|Property withTrashed()
+ * @method static Builder<static>|Property withoutTrashed()
+ * @mixin Eloquent
  */
 class Property extends Model implements HasMedia
 {

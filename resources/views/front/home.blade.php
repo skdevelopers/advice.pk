@@ -13,9 +13,9 @@
                 tab: 'buy'
             }
         }
-        function propertySearch(type) {
+        function propertySearch(tab) {
             return {
-                search: { keyword: '', category: '', min_price: '', max_price: '', type },
+                search: { keyword: '', category: '', min_price: '', max_price: '', purpose: tab }, // use 'purpose'
                 results: [],
                 loading: false,
                 searched: false,

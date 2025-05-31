@@ -4,7 +4,7 @@
         <div class="swiper-wrapper">
             <div class="swiper-slide flex items-center overflow-hidden">
                 <div class="slide-inner absolute end-0 top-0 size-full slide-bg-image flex items-center bg-center"
-                     data-background="{{ asset('assets/images/bg/02.jpg') }}">
+                     data-background="{{ asset('assets/front/images/bg/02.jpg') }}">
                     <div class="absolute inset-0 bg-black/70"></div>
                     <div class="container relative">
                         <div class="grid grid-cols-1">
