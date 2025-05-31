@@ -22,13 +22,13 @@
 
     <div class="mt-4">
         <div x-show="tab === 'buy'">
-            @include('front.partials.search-form', ['type' => 'buy'])
+            @include('front.partials.property-search-form', ['type' => 'buy'])
         </div>
         <div x-show="tab === 'sell'">
-            @include('front.partials.search-form', ['type' => 'sell'])
+            @include('front.partials.property-search-form', ['type' => 'sell'])
         </div>
         <div x-show="tab === 'rent'">
-            @include('front.partials.search-form', ['type' => 'rent'])
+            @include('front.partials.property-search-form', ['type' => 'rent'])
         </div>
     </div>
 </div>

@@ -13,7 +13,7 @@
         <template x-if="!loading && properties.length">
             <div class="grid lg:grid-cols-2 grid-cols-1 gap-[30px] mt-8">
                 <template x-for="property in properties" :key="property.id">
-                    <!-- Hously card markup here -->
+                    <!-- Advice card markup here -->
                 </template>
             </div>
         </template>

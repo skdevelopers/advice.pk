@@ -43,7 +43,7 @@ return new class extends Migration
             $table->string('plot_dimensions')->nullable();
             $table->integer('price')->nullable();
             $table->integer('rent')->nullable();
-            $table->string('rent_type')->default('monthly'); // monthly, yearly etc.
+            $table->string('rent_type')->nullable(); // monthly, yearly etc.
 
             // Property dynamic features (handled via separate table)
             $table->json('features')->nullable(); // dynamic: bedrooms, kitchens, garages, etc.
