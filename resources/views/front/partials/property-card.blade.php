@@ -11,7 +11,7 @@
         </div>
         <div class="p-6 w-full">
             <div class="md:pb-4 pb-6">
-                <a :href="'/property/' + property.slug" class="text-lg hover:text-green-600 font-medium ease-in-out duration-500" x-text="property.title"></a>
+                <a :href="'/properties/' + property.slug" class="text-lg hover:text-green-600 font-medium ease-in-out duration-500" x-text="property.title"></a>
             </div>
             <ul class="md:py-4 py-6 border-y border-slate-100 dark:border-gray-800 flex items-center list-none">
                 <li class="flex items-center me-4">

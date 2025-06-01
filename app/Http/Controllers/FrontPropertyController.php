@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Property;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -112,18 +115,63 @@ class FrontPropertyController extends Controller
     /**
      * Show property details by slug.
      *
-     * @param string $slug
-     * @return JsonResponse
+     * If the request wants JSON (e.g. Axios call to /properties/{slug} with Accept: application/json),
+     * this returns a JSON payload. Otherwise, it returns the Blade view.
+     *
+     * @param  Request  $request
+     * @param  string   $slug
+     * @return Factory|View|Application|JsonResponse
      */
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug)
     {
-        $property = Property::with(['media', 'society', 'user'])
+        // Load the property (and its images relation) or 404.
+        $property = Property::with('images')
             ->where('slug', $slug)
             ->where('approved', true)
             ->where('status', 'active')
             ->firstOrFail();
 
-        return response()->json(['data' => $this->transform($property, true)]);
+        // If the client explicitly wants JSON, return the JSON structure:
+        if ($request->wantsJson()) {
+            // Build an array of image URLs:
+            $images = $property->images->map(function ($img) {
+                // Assuming your Image model has a 'url' attribute.
+                // Adjust if your actual column/key is different.
+                return ['url' => $img->url];
+            })->all();
+
+            // Split the description into paragraphs, if you store it as one block.
+            // If your DB column is already an array/collection, adjust accordingly.
+            $descriptionParagraphs = [];
+            if (!empty($property->description)) {
+                // Example: split on double newlines. Change logic if needed.
+                $descriptionParagraphs = array_filter(
+                    array_map('trim', explode("\n\n", $property->description))
+                );
+            }
+
+            return response()->json([
+                'data' => [
+                    'id'                      => $property->id,
+                    'title'                   => $property->title,
+                    'address'                 => $property->address,
+                    'size'                    => $property->size,
+                    'beds'                    => $property->beds,
+                    'baths'                   => $property->baths,
+                    'description_paragraphs'  => $descriptionParagraphs,
+                    'images'                  => $images,
+                    'map_embed_url'           => $property->map_embed_url,
+                    'price'                   => (float) $property->price,
+                    'status'                  => $property->status,
+                    'days_on_market'          => $property->days_on_market,
+                    'price_per_sqf'           => (float) $property->price_per_sqf,
+                    'monthly_payment'         => (float) $property->monthly_payment,
+                ],
+            ]);
+        }
+
+        // Otherwise, return the Blade view (passing the entire Eloquent model).
+        return view('front.property-detail', compact('property'));
     }
 
     /**
