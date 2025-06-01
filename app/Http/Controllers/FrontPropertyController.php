@@ -115,36 +115,38 @@ class FrontPropertyController extends Controller
     /**
      * Show property details by slug.
      *
-     * If the request wants JSON (e.g. Axios call to /properties/{slug} with Accept: application/json),
-     * this returns a JSON payload. Otherwise, it returns the Blade view.
+     * If the request wants JSON (Axios call to /api/properties/{slug}), this returns JSON.
+     * Otherwise, return the Blade view.
      *
      * @param  Request  $request
      * @param  string   $slug
-     * @return Factory|View|Application|JsonResponse
+     * @return Application|Factory|View|JsonResponse|object
      */
     public function show(Request $request, string $slug)
     {
-        // Load the property (and its images relation) or 404.
-        $property = Property::with('images')
-            ->where('slug', $slug)
+        // 1) Load the property or 404. (No more with('images'), since Spatie uses MediaLibrary.)
+        $property = Property::where('slug', $slug)
             ->where('approved', true)
             ->where('status', 'active')
             ->firstOrFail();
 
-        // If the client explicitly wants JSON, return the JSON structure:
+        // 2) If JSON is explicitly requested, build an array of URLs from the media collection:
         if ($request->wantsJson()) {
-            // Build an array of image URLs:
-            $images = $property->images->map(function ($img) {
-                // Assuming your Image model has a 'url' attribute.
-                // Adjust if your actual column/key is different.
-                return ['url' => $img->url];
+            // Use the 'gallery' collection (or 'property_image' if you only have a single file).
+            $mediaItems = $property->getMedia('gallery');
+            // If you only ever store one image in 'property_image', comment out the above line and uncomment below:
+            // $mediaItems = $property->getMedia('property_image');
+
+            $images = collect($mediaItems)->map(function ($media) {
+                return [
+                    // getFullUrl() returns the absolute URL; getUrl() returns relative if you prefer.
+                    'url' => $media->getUrl(),
+                ];
             })->all();
 
-            // Split the description into paragraphs, if you store it as one block.
-            // If your DB column is already an array/collection, adjust accordingly.
+            // Split description into paragraphs (same as before).
             $descriptionParagraphs = [];
             if (!empty($property->description)) {
-                // Example: split on double newlines. Change logic if needed.
                 $descriptionParagraphs = array_filter(
                     array_map('trim', explode("\n\n", $property->description))
                 );
@@ -152,28 +154,27 @@ class FrontPropertyController extends Controller
 
             return response()->json([
                 'data' => [
-                    'id'                      => $property->id,
-                    'title'                   => $property->title,
-                    'address'                 => $property->address,
-                    'size'                    => $property->size,
-                    'beds'                    => $property->beds,
-                    'baths'                   => $property->baths,
-                    'description_paragraphs'  => $descriptionParagraphs,
-                    'images'                  => $images,
-                    'map_embed_url'           => $property->map_embed_url,
-                    'price'                   => (float) $property->price,
-                    'status'                  => $property->status,
-                    'days_on_market'          => $property->days_on_market,
-                    'price_per_sqf'           => (float) $property->price_per_sqf,
-                    'monthly_payment'         => (float) $property->monthly_payment,
+                    'id'                     => $property->id,
+                    'title'                  => $property->title,
+                    'address'                => $property->location,      // adjust if you use $property->address vs $property->location
+                    'size'                   => $property->plot_size,    // or $property->size if that’s the column
+                    'beds'                   => $property->features['beds'] ?? null,   // adjust if you store beds/baths inside features array
+                    'baths'                  => $property->features['baths'] ?? null,  // (Or from dedicated columns)
+                    'description_paragraphs' => $descriptionParagraphs,
+                    'images'                 => $images,
+                    'map_embed'              => $property->map_embed,    // your column is `map_embed`
+                    'price'                  => (float) $property->price,
+                    'status'                 => $property->status,
+                    'days_on_market'         => $property->views,         // or however you calculate days_on_market
+                    'price_per_sqf'          => (float) $property->price / (float) ($property->plot_size ?: 1),
+                    'monthly_payment'        => (float) ($property->price / 12),
                 ],
             ]);
         }
 
-        // Otherwise, return the Blade view (passing the entire Eloquent model).
+        // 3) Otherwise (standard web request), return the Blade view and pass the Eloquent model.
         return view('front.property-detail', compact('property'));
     }
-
     /**
      * Transform property for API output.
      *

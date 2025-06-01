@@ -6,12 +6,14 @@ use App\Http\Controllers\Admin\SocietyController;
 use App\Http\Controllers\Admin\SubSectorController;
 use App\Http\Controllers\Admin\SubSocietyController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\FrontPropertyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('front.home');
 });
-
+Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
+    ->name('properties.show');
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
 
