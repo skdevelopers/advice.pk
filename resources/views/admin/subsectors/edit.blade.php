@@ -70,20 +70,6 @@
                             >
                         </div>
                         <div>
-                            <label class="block mb-1 font-medium">Title</label>
-                            <input
-                                    type="text"
-                                    x-model="form.title"
-                                    name="title"
-                                    @input="generateSlug()"
-                                    class="w-full border px-3 py-2 rounded"
-                            >
-                        </div>
-                    </div>
-
-                    {{-- Slug & Block --}}
-                    <div class="grid md:grid-cols-2 gap-4 mb-4">
-                        <div>
                             <label class="block mb-1 font-medium">Slug</label>
                             <input
                                     type="text"
@@ -91,6 +77,20 @@
                                     name="slug"
                                     class="w-full border px-3 py-2 rounded"
                                     required
+                            >
+                        </div>
+                    </div>
+
+                    {{-- Slug & Block --}}
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block mb-1 font-medium">Title</label>
+                            <input
+                                    type="text"
+                                    x-model="form.title"
+                                    name="title"
+                                    @input="generateSlug()"
+                                    class="w-full border px-3 py-2 rounded"
                             >
                         </div>
                         <div>
@@ -199,7 +199,7 @@
                 previewUrl: '{{ $subSector->getFirstMediaUrl("sub_sector_image") }}',
 
                 generateSlug() {
-                    this.form.slug = this.form.title
+                    this.form.slug = this.form.name
                         .toLowerCase()
                         .replace(/[^a-z0-9\s-]/g, '')
                         .trim()
