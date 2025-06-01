@@ -120,31 +120,45 @@ class FrontPropertyController extends Controller
      *
      * @param  Request  $request
      * @param  string   $slug
-     * @return Application|Factory|View|JsonResponse|object
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View|\Illuminate\Http\JsonResponse
      */
     public function show(Request $request, string $slug)
     {
-        // 1) Load the property or 404. (No more with('images'), since Spatie uses MediaLibrary.)
+        // 1) Load the property or fail with a 404
         $property = Property::where('slug', $slug)
             ->where('approved', true)
             ->where('status', 'active')
             ->firstOrFail();
 
-        // 2) If JSON is explicitly requested, build an array of URLs from the media collection:
+        // 2) JSON path: build an "images" array from either 'gallery' or fallback to 'property_image'
         if ($request->wantsJson()) {
-            // Use the 'gallery' collection (or 'property_image' if you only have a single file).
-            $mediaItems = $property->getMedia('gallery');
-            // If you only ever store one image in 'property_image', comment out the above line and uncomment below:
-            // $mediaItems = $property->getMedia('property_image');
+            // Try to pull _all_ media from the 'gallery' collection:
+            $galleryItems = $property->getMedia('gallery');
 
-            $images = collect($mediaItems)->map(function ($media) {
-                return [
-                    // getFullUrl() returns the absolute URL; getUrl() returns relative if you prefer.
-                    'url' => $media->getUrl(),
-                ];
-            })->all();
+            // If gallery is empty, look for a single URL in 'property_image'
+            if ($galleryItems->isEmpty()) {
+                // getFirstMediaUrl() returns a string URL or empty string
+                $singleUrl = $property->getFirstMediaUrl('property_image');
 
-            // Split description into paragraphs (same as before).
+                if ($singleUrl) {
+                    // Instead of trying to wrap a fake Media object, just build a plain array:
+                    $images = [
+                        ['url' => $singleUrl]
+                    ];
+                } else {
+                    // Neither gallery nor property_image had anything
+                    $images = [];
+                }
+            } else {
+                // Map real Media objects to ['url' => …] arrays
+                $images = $galleryItems
+                    ->map(fn(\Spatie\MediaLibrary\MediaCollections\Models\Media $m) => [
+                        'url' => $m->getUrl()
+                    ])
+                    ->all();
+            }
+
+            // Split description into paragraphs (same as before)
             $descriptionParagraphs = [];
             if (!empty($property->description)) {
                 $descriptionParagraphs = array_filter(
@@ -156,25 +170,27 @@ class FrontPropertyController extends Controller
                 'data' => [
                     'id'                     => $property->id,
                     'title'                  => $property->title,
-                    'address'                => $property->location,      // adjust if you use $property->address vs $property->location
-                    'size'                   => $property->plot_size,    // or $property->size if that’s the column
-                    'beds'                   => $property->features['beds'] ?? null,   // adjust if you store beds/baths inside features array
-                    'baths'                  => $property->features['baths'] ?? null,  // (Or from dedicated columns)
+                    'address'                => $property->location,   // or $property->address if that’s your column
+                    'size'                   => $property->plot_size,  // adjust if your column is different
+                    'beds'                   => $property->features['beds'] ?? null,
+                    'baths'                  => $property->features['baths'] ?? null,
                     'description_paragraphs' => $descriptionParagraphs,
                     'images'                 => $images,
-                    'map_embed'              => $property->map_embed,    // your column is `map_embed`
+                    'map_embed'              => $property->map_embed,  // your column name, not map_embed_url
                     'price'                  => (float) $property->price,
                     'status'                 => $property->status,
-                    'days_on_market'         => $property->views,         // or however you calculate days_on_market
+                    'days_on_market'         => $property->views,       // or whichever logic you use
                     'price_per_sqf'          => (float) $property->price / (float) ($property->plot_size ?: 1),
                     'monthly_payment'        => (float) ($property->price / 12),
-                ],
+                ]
             ]);
         }
 
-        // 3) Otherwise (standard web request), return the Blade view and pass the Eloquent model.
+        // 3) Otherwise (web request), render your Blade and pass the $property model
         return view('front.property-detail', compact('property'));
     }
+
+
     /**
      * Transform property for API output.
      *
