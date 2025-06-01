@@ -69,7 +69,7 @@
                             <div class="flex mt-6">
                                 <i data-feather="phone" class="size-5 text-green-600 me-3"></i>
                                 <div>
-                                    <a href="tel:+92331 54 54 249" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out">+152 534-468-854</a>
+                                    <a href="tel:+92331 54 54 249" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out">+92331 54 54 249</a>
                                 </div>
                             </div>
                         </div>
