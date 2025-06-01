@@ -65,6 +65,7 @@
                                     type="text"
                                     x-model="form.name"
                                     name="name"
+                                    @input="generateSlug()"
                                     class="w-full border px-3 py-2 rounded"
                                     required
                             >
@@ -89,7 +90,6 @@
                                     type="text"
                                     x-model="form.title"
                                     name="title"
-                                    @input="generateSlug()"
                                     class="w-full border px-3 py-2 rounded"
                             >
                         </div>
