@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="{{ asset('assets/front/libs/@iconscout/unicons/css/line.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/libs/@mdi/font/css/materialdesignicons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/css/tailwind.css') }}" />
+    <!-- Additional Page-Specific Styles -->
+    @stack('styles')
 </head>
 <body class="dark:bg-slate-900">
 
