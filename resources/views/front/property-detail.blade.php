@@ -16,8 +16,15 @@
 
                     <!-- GALLERY SLIDER -->
                     <div class="grid grid-cols-1 relative">
-                        <!-- Empty container. We'll fill slides via JS once images arrive. -->
-                        <div class="tiny-one-item" x-ref="sliderContainer"></div>
+                        <!--
+                          1) NO static tiny-one-item class here at page load,
+                             so Hously’s plugin.init.js will skip auto-init.
+                          2) Once images arrive, Alpine adds 'tiny-one-item' dynamically.
+                        -->
+                        <div
+                                x-ref="sliderContainer"
+                                x-bind:class="images.length > 0 ? 'tiny-one-item' : ''"
+                        ></div>
 
                         <!-- Loading placeholder while images is still empty -->
                         <div
@@ -76,12 +83,11 @@
                 </div>
                 <!-- /LEFT COLUMN -->
 
-                <!-- RIGHT COLUMN: SIDEBAR (Price + Stats + Buttons + Contact) -->
+                <!-- RIGHT COLUMN: Sidebar (Price/Stats/Buttons/Contact) -->
                 <div class="lg:col-span-4 md:col-span-5">
                     <div class="sticky top-20">
                         <div class="rounded-md bg-slate-50 dark:bg-slate-800 shadow-sm dark:shadow-gray-700">
                             <div class="p-6">
-                                <!-- PRICE HEADER -->
                                 <h5 class="text-2xl font-medium">Price:</h5>
                                 <div class="flex justify-between items-center mt-4">
                                     <span class="text-xl font-medium" x-text="formatCurrency(property.price)"></span>
@@ -91,7 +97,6 @@
                                     ></span>
                                 </div>
 
-                                <!-- STATS LIST -->
                                 <ul class="list-none mt-4">
                                     <li class="flex justify-between items-center">
                                         <span class="text-slate-400 text-sm">Days on Market</span>
@@ -172,12 +177,12 @@
                             this.images   = [];
                         })
                         .finally(() => {
-                            // 1) Hide “Loading” spinner
+                            // 1) Hide the “Loading images” placeholder.
                             this.loading = false;
 
-                            // 2) If there are images, inject the slides and initialize Tiny Slider
+                            // 2) If we have images, inject them and then init Tiny Slider.
                             if (this.images.length) {
-                                // Build all <div class="tiny-slide"><img src="…"></div> HTML
+                                // Build slide HTML:
                                 const slidesHtml = this.images
                                     .map(img => `
                                 <div class="tiny-slide">
@@ -188,10 +193,13 @@
                                     )
                                     .join('');
 
-                                // Inject into the slider container
+                                // Inject into the slider container:
                                 this.$refs.sliderContainer.innerHTML = slidesHtml;
 
-                                // Defer Tiny Slider init until after DOM update
+                                // 3) Add the tiny-one-item class now that slides exist (so Hously's plugin won't auto-init earlier).
+                                this.$refs.sliderContainer.classList.add('tiny-one-item');
+
+                                // 4) Initialize Tiny Slider after DOM update:
                                 this.$nextTick(() => {
                                     if (window.tns) {
                                         tns({
