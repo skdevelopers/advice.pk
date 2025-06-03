@@ -1,18 +1,74 @@
 {{-- resources/views/front/partials/property-card.blade.php --}}
-<div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500 w-full mx-auto">
+<div
+        class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500 w-full mx-auto"
+>
     <div class="md:flex">
+
+        {{-- IMAGE + OVERLAYS --}}
         <div class="relative md:shrink-0">
-            <img class="size-full object-cover md:w-48" :src="property.property_image" alt="">
+            {{-- Actual property image --}}
+            <img
+                    class="size-full object-cover md:w-48 w-full h-48 md:h-auto"
+                    :src="property.property_image"
+                    alt="Advice Property Image"
+            >
+
+            {{-- Top‐right badge (“Sale”) --}}
             <div class="absolute top-4 end-4">
-                <a href="javascript:void(0)" class="btn btn-icon bg-white dark:bg-slate-900 shadow-sm dark:shadow-gray-700 !rounded-full text-slate-100 dark:text-slate-700 focus:text-red-600 dark:focus:text-red-600 hover:text-red-600 dark:hover:text-red-600">
-                    <i class="mdi mdi-heart text-[20px]"></i>
-                </a>
+                <span
+                        class="bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded"
+                >
+                    Sale
+                </span>
+            </div>
+
+            {{-- Bottom‐left: view count + photo count --}}
+            <div class="absolute bottom-4 start-4 flex items-center space-x-4 text-white text-sm">
+                {{-- View count --}}
+                <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1">
+                    <i data-feather="eye" class="w-4 h-4 mr-1"></i>
+                    <span x-text="property.views"></span>
+                </div>
+                {{-- Photo count --}}
+                <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1">
+                    <i data-feather="camera" class="w-4 h-4 mr-1"></i>
+                    <span x-text="property.images.length"></span>
+                </div>
+            </div>
+
+            {{-- Bottom‐right: Property ID (P-ID) --}}
+            <div class="absolute bottom-4 end-4 bg-black bg-opacity-50 text-white text-xs font-medium px-2 py-1 rounded">
+                P-ID: <span x-text="property.id"></span>
             </div>
         </div>
-        <div class="p-6 w-full">
+
+        {{-- DETAILS SECTION --}}
+        <div class="p-6 w-full flex flex-col justify-between">
+
+            {{-- Title + Link --}}
             <div class="md:pb-4 pb-6">
-                <a :href="'/properties/' + property.slug" class="text-lg hover:text-green-600 font-medium ease-in-out duration-500" x-text="property.title"></a>
+                <a
+                        :href="'/properties/' + property.slug"
+                        class="text-lg hover:text-green-600 font-medium ease-in-out duration-500 block"
+                        x-text="property.title"
+                ></a>
             </div>
+
+            {{-- Price --}}
+            <div class="mb-2">
+                <span class="text-slate-400">Price</span>
+                <p class="text-lg font-medium" x-text="property.price"></p>
+            </div>
+
+            {{-- Address --}}
+            <div class="mb-4">
+                <span class="text-slate-400 flex items-center">
+                    <i class="uil uil-map-marker text-2xl me-2 text-green-600"></i>
+                    <span x-text="property.address ?? 'n/a'"></span>
+                </span>
+            </div>
+
+            {{-- Specs: Area / Beds / Baths --}}
             <ul class="md:py-4 py-6 border-y border-slate-100 dark:border-gray-800 flex items-center list-none">
                 <li class="flex items-center me-4">
                     <i class="uil uil-compress-arrows text-2xl me-2 text-green-600"></i>
@@ -27,23 +83,35 @@
                     <span x-text="property.baths"></span>
                 </li>
             </ul>
-            <ul class="md:pt-4 pt-6 flex justify-between items-center list-none">
-                <li>
-                    <span class="text-slate-400">Price</span>
-                    <p class="text-lg font-medium" x-text="property.price"></p>
-                </li>
-                <li>
-                    <span class="text-slate-400">Rating</span>
-                    <ul class="text-lg font-medium text-amber-400 list-none">
-                        <li class="inline"><i class="mdi mdi-star"></i></li>
-                        <li class="inline"><i class="mdi mdi-star"></i></li>
-                        <li class="inline"><i class="mdi mdi-star"></i></li>
-                        <li class="inline"><i class="mdi mdi-star"></i></li>
-                        <li class="inline"><i class="mdi mdi-star"></i></li>
-                        <li class="inline text-slate-900 dark:text-white">5.0</li>
-                    </ul>
-                </li>
-            </ul>
+
+            {{-- ACTION BUTTONS (replacing “Rating”) --}}
+            <div class="mt-6 flex space-x-3">
+                {{-- CALL Button --}}
+                <a
+                        :href="'tel:' + property.phone"
+                        class="flex-1 btn border border-blue-500 text-blue-500 hover:bg-blue-50 rounded-md text-center py-2 font-medium ease-in-out duration-300"
+                >
+                    CALL
+                </a>
+
+                {{-- WHATSAPP Button --}}
+                <a
+                        :href="'https://wa.me/' + property.whatsapp_number"
+                        target="_blank"
+                        class="flex-1 btn bg-green-600 hover:bg-green-700 text-white rounded-md text-center py-2 font-medium ease-in-out duration-300"
+                >
+                    WHATSAPP
+                </a>
+
+                {{-- More Detail Button --}}
+                <a
+                        :href="'/properties/' + property.slug"
+                        class="flex-1 btn bg-blue-600 hover:bg-blue-700 text-white rounded-md text-center py-2 font-medium ease-in-out duration-300"
+                >
+                    More Detail
+                </a>
+            </div>
+
         </div>
     </div>
 </div>

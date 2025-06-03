@@ -57,10 +57,6 @@
 <!-- Back to top -->
     <a href="#" onclick="topFunction()" id="back-to-top" class="back-to-top fixed hidden text-lg rounded-full z-10 bottom-5 end-5 size-9 text-center bg-green-600 text-white justify-center items-center"><i class="uil uil-arrow-up"></i></a>
 <!-- Back to top -->
-{{-- Alpine.js (MUST load before any Alpine code runs) --}}
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-{{-- Axios --}}
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 {{-- Global JS, --}}
 <script src="{{ asset('assets/front/libs/tiny-slider/min/tiny-slider.js') }}"></script>
@@ -69,7 +65,10 @@
 <script src="{{ asset('assets/front/libs/feather-icons/feather.min.js') }}"></script>
 <script src="{{ asset('assets/front/js/plugins.init.js') }}"></script>
 <script src="{{ asset('assets/front/js/init.app.js') }}"></script>
-
+{{-- Alpine.js (MUST load before any Alpine code runs) --}}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{{-- Axios --}}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 {{-- Example: Theme/Dark Switch --}}
 <script>
     document.addEventListener('alpine:init', () => {

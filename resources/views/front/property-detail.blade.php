@@ -11,37 +11,31 @@
         <div class="container relative">
             <div class="grid md:grid-cols-12 grid-cols-1 gap-[30px]">
 
-                <!-- LEFT COLUMN: IMAGES + DETAILS + DESCRIPTION + MAP -->
+                <!-- LEFT COLUMN: SLIDER + DETAILS + MAP -->
                 <div class="lg:col-span-8 md:col-span-7">
 
-                    <!-- GALLERY SLIDER -->
+                    <!-- GALLERY SLIDER WRAPPER -->
                     <div class="grid grid-cols-1 relative">
-                        <!--
-                          1) NO static tiny-one-item class here at page load,
-                             so Hously’s plugin.init.js will skip auto-init.
-                          2) Once images arrive, Alpine adds 'tiny-one-item' dynamically.
-                        -->
-                        <div
-                                x-ref="sliderContainer"
-                                x-bind:class="images.length > 0 ? 'tiny-one-item' : ''"
-                        ></div>
 
-                        <!-- Loading placeholder while images is still empty -->
+                        <!-- (1) Loading overlay -->
                         <div
-                                class="text-center text-gray-400 py-10"
-                                x-show="loading && images.length === 0"
+                                class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10"
+                                x-show="loading"
                         >
-                            Loading images...
+                            <span class="text-gray-500">Loading images…</span>
                         </div>
+
+                        <!-- (2) Slider container: always in DOM; slides + class added by JS -->
+                        <div x-ref="sliderContainer" class="relative"></div>
                     </div>
-                    <!-- /END GALLERY SLIDER -->
+                    <!-- /END GALLERY SLIDER WRAPPER -->
 
 
                     <!-- TITLE + ADDRESS -->
                     <h4 class="text-2xl font-medium mt-6 mb-3" x-text="property.title ?? ''"></h4>
                     <span class="text-slate-400 flex items-center">
-                        <i data-feather="map-pin" class="size-5 me-2"></i>
-                        <span x-text="property.address ?? ''"></span>
+                    <i data-feather="map-pin" class="size-5 me-2"></i>
+                    <span x-text="property.address ?? ''"></span>
                     </span>
 
                     <!-- SIZE / BEDS / BATHS -->
@@ -83,6 +77,7 @@
                 </div>
                 <!-- /LEFT COLUMN -->
 
+
                 <!-- RIGHT COLUMN: Sidebar (Price/Stats/Buttons/Contact) -->
                 <div class="lg:col-span-4 md:col-span-5">
                     <div class="sticky top-20">
@@ -113,7 +108,6 @@
                                 </ul>
                             </div>
 
-                            <!-- ACTION BUTTONS -->
                             <div class="flex">
                                 <div class="p-1 w-1/2">
                                     <a href="#"
@@ -132,7 +126,6 @@
                             </div>
                         </div>
 
-                        <!-- CONTACT CTA -->
                         <div class="mt-12 text-center">
                             <h3 class="mb-6 text-xl leading-normal font-medium text-slate-900 dark:text-white">
                                 Have a question? Get in touch!
@@ -162,62 +155,100 @@
                 property: {},
                 images: [],
                 loading: false,
+                sliderInstance: null,
+                sliderReady: false,
 
                 fetchProperty() {
                     this.loading = true;
+
                     axios.get(`/api/properties/${this.slug}`, {
                         headers: { 'Accept': 'application/json' }
                     })
                         .then(res => {
                             this.property = res.data.data || {};
-                            this.images   = this.property.images || [];
+                            this.images = this.property.images || [];
+                            console.log('▶️ fetchProperty(): received images:', this.images);
                         })
                         .catch(() => {
                             this.property = {};
-                            this.images   = [];
+                            this.images = [];
+                            console.warn('⚠️ fetchProperty(): API failed or returned no images');
                         })
                         .finally(() => {
-                            // 1) Hide the “Loading images” placeholder.
                             this.loading = false;
 
-                            // 2) If we have images, inject them and then init Tiny Slider.
-                            if (this.images.length) {
-                                // Build slide HTML:
-                                const slidesHtml = this.images
-                                    .map(img => `
-                                <div class="tiny-slide">
-                                    <img src="${img.url}"
-                                         class="rounded-md shadow-sm dark:shadow-gray-700"
-                                         alt="Property image">
-                                </div>`
-                                    )
-                                    .join('');
-
-                                // Inject into the slider container:
-                                this.$refs.sliderContainer.innerHTML = slidesHtml;
-
-                                // 3) Add the tiny-one-item class now that slides exist (so Hously's plugin won't auto-init earlier).
-                                this.$refs.sliderContainer.classList.add('tiny-one-item');
-
-                                // 4) Initialize Tiny Slider after DOM update:
+                            if (this.images.length && !this.sliderReady) {
+                                this.sliderReady = true;
                                 this.$nextTick(() => {
-                                    if (window.tns) {
-                                        tns({
-                                            container: this.$refs.sliderContainer,
-                                            items: 1,
-                                            gutter: 0,
-                                            nav: true,
-                                            controls: false,
-                                            autoplay: true,
-                                            autoplayButtonOutput: false,
-                                            mouseDrag: true,
-                                            loop: true,
-                                        });
-                                    }
-                                    if (window.feather) feather.replace();
+                                    console.log('▶️ Next tick: building slides…');
+                                    this.buildSlides();
+                                    console.log('▶️ Next tick: starting slider…');
+                                    // Tiny-Slider often needs a micro‐delay to “see” new DOM
+                                    setTimeout(() => {
+                                        this.startSlider();
+                                    }, 0);
                                 });
                             }
                         });
+                },
+
+                buildSlides() {
+                    const container = this.$refs.sliderContainer;
+                    container.innerHTML = '';
+                    container.classList.remove('tiny-one-item');
+
+                    console.log('▶️ buildSlides(): appending slides…');
+
+                    this.images.forEach(imgObj => {
+                        const slideDiv = document.createElement('div');
+                        slideDiv.classList.add('tiny-slide');
+
+                        const imgEl = document.createElement('img');
+                        imgEl.src = imgObj.url;
+                        imgEl.alt = 'Property image';
+                        imgEl.className = 'rounded-md shadow-sm dark:shadow-gray-700';
+
+                        slideDiv.appendChild(imgEl);
+                        container.appendChild(slideDiv);
+                    });
+
+                    console.log('▶️ buildSlides(): final container.innerHTML:', container.innerHTML);
+
+                    container.classList.add('tiny-one-item');
+                    console.log('▶️ buildSlides(): added `.tiny-one-item`');
+                },
+
+                startSlider() {
+                    const container = this.$refs.sliderContainer;
+
+                    console.log('▶️ startSlider(): typeof window.tns =', typeof window.tns);
+                    console.log('▶️ startSlider(): container children count =', container.children.length);
+
+                    if (this.sliderInstance) {
+                        this.sliderInstance.destroy();
+                        this.sliderInstance = null;
+                    }
+
+                    if (window.tns) {
+                        this.sliderInstance = tns({
+                            container: container,
+                            items: 1,
+                            gutter: 0,
+                            nav: true,
+                            controls: false,
+                            autoplay: true,
+                            autoplayButtonOutput: false,
+                            mouseDrag: true,
+                            loop: true,
+                        });
+                        console.log('▶️ startSlider(): Tiny-Slider instance =', this.sliderInstance);
+                    } else {
+                        console.error('❌ startSlider(): window.tns is not defined!');
+                    }
+
+                    if (window.feather) {
+                        feather.replace();
+                    }
                 },
 
                 formatCurrency(value) {

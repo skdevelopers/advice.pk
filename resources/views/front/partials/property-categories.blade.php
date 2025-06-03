@@ -37,6 +37,13 @@
                     <p class="text-slate-400 text-sm mt-1">12 Listings</p>
                 </div>
             </div>
+            <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
+                <img src="{{ asset('assets/front/images/property/investment.jpg') }}" alt="">
+                <div class="p-4">
+                    <a href="" class="text-xl font-medium hover:text-green-600">Investment</a>
+                    <p class="text-slate-400 text-sm mt-1">12 Listings</p>
+                </div>
+            </div>
         </div><!--end grid-->
     </div><!--end container-->
 
