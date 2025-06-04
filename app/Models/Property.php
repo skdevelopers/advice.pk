@@ -105,6 +105,7 @@ class Property extends Model implements HasMedia
 {
     use SoftDeletes, InteractsWithMedia;
 
+
     protected $fillable = [
         'user_id',
         'society_id',
@@ -155,12 +156,59 @@ class Property extends Model implements HasMedia
     protected $appends = ['property_image_url'];
 
     /**
-     * Return the first “property_image” or a placeholder.
+     * Return the first “property_image” (thumb conversion) or a placeholder.
      */
     public function getPropertyImageUrlAttribute(): string
     {
-        $url = $this->getFirstMediaUrl('property_image');
-        return $url ?: asset('/assets/admin/images/hero.jpg');
+        // Attempt to get the "thumb" conversion URL (registered below).
+        $url = $this->getFirstMediaUrl('property_image', 'thumb');
+
+        // If Spatie did not generate a "thumb", fall back to the original file:
+        if (! $url) {
+            $url = $this->getFirstMediaUrl('property_image');
+        }
+
+        // If still empty, use a generic placeholder
+        return $url ?: asset('assets/admin/images/hero.jpg');
+    }
+
+    /**
+     * Register media collections and conversions.
+     */
+    public function registerMediaCollections(?Media $media = null): void
+    {
+        // Single file “property_image” with responsive images and a "thumb" conversion
+        $this
+            ->addMediaCollection('property_image')
+            ->singleFile()
+            ->withResponsiveImages();
+
+        // “gallery” can have multiple images, each with responsive conversions
+        $this
+            ->addMediaCollection('gallery')
+            ->withResponsiveImages();
+
+        // (If you have documents, you can register them here as well)
+        $this
+            ->addMediaCollection('documents')
+            ->withResponsiveImages();
+    }
+
+    /**
+     * If you want a custom “thumb” conversion (for exactly 12rem×12rem),
+     * uncomment this and tailor the width/height to roughly match 12rem (192px).
+     *
+     * NOTE: You can omit this method entirely if you rely on Spatie’s default responsive breakpoints.
+     */
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this
+            ->addMediaConversion('thumb')
+            ->width(480)   // 480 px wide (approx “12rem” at 40px root font size)
+            ->height(360)  // adjust to your desired aspect ratio
+            ->sharpen(10)
+            ->nonQueued()  // generate immediately; or queue if you prefer
+            ->withResponsiveImages();
     }
 
     public function user(): BelongsTo
@@ -176,29 +224,6 @@ class Property extends Model implements HasMedia
     public function subsector(): BelongsTo
     {
         return $this->belongsTo(SubSector::class);
-    }
-    /**
-     * (Optional) Add a custom “thumb” conversion if you need one in addition
-     * to responsive images. Otherwise, you can omit this method.
-     *
-     * @param  Media|null  $media
-     * @return void
-     */
-    public function registerMediaCollections(?Media $media = null): void
-    {
-        $this
-            ->addMediaCollection('property_image')
-            ->singleFile()
-            ->withResponsiveImages();
-
-        $this
-            ->addMediaCollection('gallery')
-            // remove singleFile so it stays multiple,
-            ->withResponsiveImages();
-
-        $this
-            ->addMediaCollection('documents')
-            ->withResponsiveImages();
     }
 
 }

@@ -1,7 +1,7 @@
 <!-- Start -->
 <section class="relative md:py-24 py-16">
     <div class="container relative">
-        <div class="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 md:gap-[30px] gap-3">
+        <div class="grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 md:gap-[30px] gap-3">
             <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
                 <img src="{{ asset('assets/front/images/property/residential.jpg') }}" alt="">
                 <div class="p-4">
@@ -50,7 +50,7 @@
     <div class="container relative lg:mt-24 mt-16">
         <div class="grid grid-cols-1 pb-8 text-center">
             <h3 class="mb-4 md:text-3xl md:leading-normal text-2xl leading-normal font-semibold">What We Do?</h3>
-            <p class="text-slate-400 max-w-xl mx-auto">A great plateform to buy, sell and rent your properties without any agent or commisions.</p>
+            <p class="text-slate-400 max-w-xl mx-auto">A great platform to buy, sell and rent your properties without any agent or commisions.</p>
         </div><!--end grid-->
 
         <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 mt-8 gap-[30px]">

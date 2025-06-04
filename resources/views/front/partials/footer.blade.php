@@ -30,7 +30,7 @@
                             <a href="#" class="text-[22px] focus:outline-none">
                                 <img src="{{ asset('assets/front/images/logo-light.png') }}" alt="">
                             </a>
-                            <p class="mt-6 text-gray-300">A great platform to buy, sell and rent your properties without any agent or commissions.</p>
+                            <p class="mt-6 text-gray-300">A great platform to buy, sell and rent your properties.</p>
                         </div>
                         <div class="lg:col-span-2 md:col-span-4">
                             <h5 class="tracking-[1px] text-gray-100 font-semibold">Company</h5>

@@ -13,7 +13,7 @@
                                     We will help you find <br> your <span class="text-green-600">Wonderful</span> home
                                 </h1>
                                 <p class="text-white/70 text-xl max-w-xl mx-auto">
-                                    A great platform to buy, sell and rent your properties without any agent or commissions.
+                                    A great platform to buy, sell and rent your properties.
                                 </p>
                                 <div class="mt-6">
                                     <a href="#" class="btn bg-green-600 hover:bg-green-700 text-white rounded-md">See More</a>

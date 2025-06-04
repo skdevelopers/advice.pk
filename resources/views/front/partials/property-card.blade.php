@@ -1,42 +1,52 @@
 {{-- resources/views/front/partials/property-card.blade.php --}}
 <div
-        class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500 w-full mx-auto"
+        class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl
+           dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700
+           overflow-hidden ease-in-out duration-500 w-full mx-auto"
 >
     <div class="md:flex">
 
         {{-- IMAGE + OVERLAYS --}}
-        <div class="relative md:shrink-0">
-            {{-- Actual property image --}}
-            <img
-                    class="size-full object-cover md:w-48 w-full h-48 md:h-auto"
-                    :src="property.property_image"
-                    alt="Advice Property Image"
-            >
-
-            {{-- Top‐right badge (“Sale”) --}}
-            <div class="absolute top-4 end-4">
-                <span
-                        class="bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded"
+        <div class="relative md:shrink-0 md:w-48 w-full">
+            {{--
+                • We force every property‐card image into a 12rem (h-48) box so that
+                  all cards line up exactly.
+                • object-cover crops and centers the photo within that box.
+                • w-full on mobile, md:w-48 on md+ screens matches Hously’s card width.
+            --}}
+            <div class="h-48 w-full overflow-hidden">
+                <img
+                        x-bind:src="property.property_image_url"
+                        alt="Property image"
+                        class="h-full w-full object-cover object-center
+                           transition-transform duration-500 group-hover:scale-105"
+                        x-on:error="$event.target.src = '{{ asset("assets/admin/images/hero.jpg") }}'"
                 >
+            </div>
+
+            {{-- Top-right badge (“Sale”) --}}
+            <div class="absolute top-4 end-4">
+                <span class="bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded">
                     Sale
                 </span>
             </div>
 
-            {{-- Bottom‐left: view count + photo count --}}
-            <div class="absolute bottom-4 start-4 flex items-center space-x-4 text-white text-sm">
+            {{-- Bottom-left: view count + photo count --}}
+            <div class="absolute bottom-4 start-4 flex items-center space-x-2">
                 {{-- View count --}}
-                <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1">
+                <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1 text-white text-xs">
                     <i data-feather="eye" class="w-4 h-4 mr-1"></i>
-                    <span x-text="property.views"></span>
+                    <span x-text="property.views ?? 0"></span>
                 </div>
                 {{-- Photo count --}}
-                <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1">
+                <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1 text-white text-xs">
                     <i data-feather="camera" class="w-4 h-4 mr-1"></i>
-                    <span x-text="property.images.length"></span>
+                    {{-- If property.images is undefined, show 0 --}}
+                    <span x-text="(property.images && property.images.length) ? property.images.length : 0"></span>
                 </div>
             </div>
 
-            {{-- Bottom‐right: Property ID (P-ID) --}}
+            {{-- Bottom-right: Property ID --}}
             <div class="absolute bottom-4 end-4 bg-black bg-opacity-50 text-white text-xs font-medium px-2 py-1 rounded">
                 P-ID: <span x-text="property.id"></span>
             </div>
@@ -44,7 +54,6 @@
 
         {{-- DETAILS SECTION --}}
         <div class="p-6 w-full flex flex-col justify-between">
-
             {{-- Title + Link --}}
             <div class="md:pb-4 pb-6">
                 <a
@@ -64,7 +73,7 @@
             <div class="mb-4">
                 <span class="text-slate-400 flex items-center">
                     <i class="uil uil-map-marker text-2xl me-2 text-green-600"></i>
-                    <span x-text="property.address ?? 'n/a'"></span>
+                    <span x-text="property.location ?? 'n/a'"></span>
                 </span>
             </div>
 
@@ -84,12 +93,13 @@
                 </li>
             </ul>
 
-            {{-- ACTION BUTTONS (replacing “Rating”) --}}
+            {{-- ACTION BUTTONS (CALL / WHATSAPP / MORE DETAIL) --}}
             <div class="mt-6 flex space-x-3">
                 {{-- CALL Button --}}
                 <a
                         :href="'tel:' + property.phone"
-                        class="flex-1 btn border border-blue-500 text-blue-500 hover:bg-blue-50 rounded-md text-center py-2 font-medium ease-in-out duration-300"
+                        class="flex-1 btn border border-blue-500 text-blue-500 hover:bg-blue-50
+                           rounded-md text-center py-2 font-medium ease-in-out duration-300"
                 >
                     CALL
                 </a>
@@ -98,7 +108,8 @@
                 <a
                         :href="'https://wa.me/' + property.whatsapp_number"
                         target="_blank"
-                        class="flex-1 btn bg-green-600 hover:bg-green-700 text-white rounded-md text-center py-2 font-medium ease-in-out duration-300"
+                        class="flex-1 btn bg-green-600 hover:bg-green-700 text-white rounded-md
+                           text-center py-2 font-medium ease-in-out duration-300"
                 >
                     WHATSAPP
                 </a>
@@ -106,12 +117,12 @@
                 {{-- More Detail Button --}}
                 <a
                         :href="'/properties/' + property.slug"
-                        class="flex-1 btn bg-blue-600 hover:bg-blue-700 text-white rounded-md text-center py-2 font-medium ease-in-out duration-300"
+                        class="flex-1 btn bg-blue-600 hover:bg-blue-700 text-white rounded-md
+                           text-center py-2 font-medium ease-in-out duration-300"
                 >
                     More Detail
                 </a>
             </div>
-
         </div>
     </div>
 </div>

@@ -9,6 +9,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 
 class FrontPropertyController extends Controller
@@ -152,7 +153,7 @@ class FrontPropertyController extends Controller
             } else {
                 // Map real Media objects to ['url' => …] arrays
                 $images = $galleryItems
-                    ->map(fn(\Spatie\MediaLibrary\MediaCollections\Models\Media $m) => [
+                    ->map(fn(Media $m) => [
                         'url' => $m->getUrl()
                     ])
                     ->all();
@@ -195,10 +196,9 @@ class FrontPropertyController extends Controller
      * Transform property for API output.
      *
      * @param Property $property
-     * @param bool $detailed
      * @return array
      */
-    private function transform(Property $property, bool $detailed = false): array
+    private function transform(Property $property): array
     {
         return [
             'id' => $property->id,
@@ -211,12 +211,18 @@ class FrontPropertyController extends Controller
             'baths' => $property->features['baths'] ?? null,
             'price' => $property->price,
             'location' => $property->location,
-            'property_image' => $property->getFirstMediaUrl('property_image') ?: asset('assets/front/images/about.jpg'),
-            'gallery' => $property->getMedia('gallery')->map->getUrl(),
+            'primary_image_url'  => $property->property_image_url,
+            // Full gallery (used elsewhere, if needed):
+            'gallery'            => $property->getMedia('gallery')
+                ->map(fn($m) => $m->getFullUrl())
+                ->all(),
+            'views'              => $property->views,
+            'whatsapp_number'    => $property->whatsapp_number ?? '',
+            'phone'              => $property->phone ?? '',
             'society' => $property->society?->name,
             'created_at' => $property->created_at->toDateString(),
             'rating' => 5, // Placeholder or real calculation
-            'description' => $detailed ? Str::limit($property->description, 2000) : null,
+            'description' => false ? Str::limit($property->description, 2000) : null,
             // add any more detailed fields as needed
         ];
     }
