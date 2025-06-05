@@ -3,44 +3,44 @@
     <div class="container relative">
         <div class="grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 md:gap-[30px] gap-3">
             <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
-                <img src="{{ asset('assets/front/images/property/residential.jpg') }}" alt="">
+                <img src="{{ asset('assets/front/images/property/residential.jpg') }}" alt="residential">
                 <div class="p-4">
                     <a href="" class="text-xl font-medium hover:text-green-600">Residential</a>
                     <p class="text-slate-400 text-sm mt-1">469 Listings</p>
                 </div>
             </div>
             <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
-                <img src="{{ asset('assets/front/images/property/land.jpg') }}" alt="">
-                <div class="p-4">
-                    <a href="" class="text-xl font-medium hover:text-green-600">Land</a>
-                    <p class="text-slate-400 text-sm mt-1">124 Listings</p>
-                </div>
-            </div>
-            <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
-                <img src="{{ asset('assets/front/images/property/commercial.jpg') }}" alt="">
+                <img src="{{ asset('assets/front/images/property/commercial.jpg') }}" alt="commercial">
                 <div class="p-4">
                     <a href="" class="text-xl font-medium hover:text-green-600">Commercial</a>
                     <p class="text-slate-400 text-sm mt-1">265 Listings</p>
                 </div>
             </div>
             <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
-                <img src="{{ asset('assets/front/images/property/industrial.jpg') }}" alt="">
+                <img src="{{ asset('assets/front/images/property/apartment.jpg') }}" alt="apartment">
                 <div class="p-4">
-                    <a href="" class="text-xl font-medium hover:text-green-600">Industrial</a>
+                    <a href="" class="text-xl font-medium hover:text-green-600">Apartments</a>
+                    <p class="text-slate-400 text-sm mt-1">124 Listings</p>
+                </div>
+            </div>
+            <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
+                <img src="{{ asset('assets/front/images/property/house.jpg') }}" alt="house">
+                <div class="p-4">
+                    <a href="" class="text-xl font-medium hover:text-green-600">House</a>
                     <p class="text-slate-400 text-sm mt-1">452 Listings</p>
                 </div>
             </div>
             <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
-                <img src="{{ asset('assets/front/images/property/investment.jpg') }}" alt="">
+                <img src="{{ asset('assets/front/images/property/farmhouse.jpg') }}" alt="farmhouse">
                 <div class="p-4">
-                    <a href="" class="text-xl font-medium hover:text-green-600">Investment</a>
+                    <a href="" class="text-xl font-medium hover:text-green-600">Farmhouse</a>
                     <p class="text-slate-400 text-sm mt-1">12 Listings</p>
                 </div>
             </div>
             <div class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 overflow-hidden ease-in-out duration-500">
-                <img src="{{ asset('assets/front/images/property/investment.jpg') }}" alt="">
+                <img src="{{ asset('assets/front/images/property/project.jpg') }}" alt="project">
                 <div class="p-4">
-                    <a href="" class="text-xl font-medium hover:text-green-600">Investment</a>
+                    <a href="" class="text-xl font-medium hover:text-green-600">Project</a>
                     <p class="text-slate-400 text-sm mt-1">12 Listings</p>
                 </div>
             </div>

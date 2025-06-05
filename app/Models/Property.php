@@ -200,7 +200,7 @@ class Property extends Model implements HasMedia
      *
      * NOTE: You can omit this method entirely if you rely on Spatie’s default responsive breakpoints.
      */
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this
             ->addMediaConversion('thumb')

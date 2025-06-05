@@ -1,5 +1,5 @@
 {{-- front/partials/videos.blade.php --}}
-<section class="bg-slate-100 py-12">
+<section class="bg-slate-100 py-10">
     <div class="container mx-auto px-4">
         <h2 class="text-2xl md:text-3xl font-semibold text-center mb-8 text-slate-900">VIDEOS OVERVIEW</h2>
         <div class="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6 md:gap-8">

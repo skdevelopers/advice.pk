@@ -28,14 +28,14 @@
                     <div class="grid md:grid-cols-12 grid-cols-1 gap-[30px] -mt-24">
                         <div class="lg:col-span-4 md:col-span-12">
                             <a href="#" class="text-[22px] focus:outline-none">
-                                <img src="{{ asset('assets/front/images/logo-light.png') }}" alt="">
+                                <img src="{{ asset('assets/front/images/logo-light.png') }}" alt="logo">
                             </a>
                             <p class="mt-6 text-gray-300">A great platform to buy, sell and rent your properties.</p>
                         </div>
                         <div class="lg:col-span-2 md:col-span-4">
                             <h5 class="tracking-[1px] text-gray-100 font-semibold">Company</h5>
                             <ul class="list-none footer-list mt-6">
-                                <li><a href="/aboutus" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out"><i class="uil uil-angle-right-b me-1"></i> About us</a></li>
+                                <li><a href="{{ url('/about') }}" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out"><i class="uil uil-angle-right-b me-1"></i> About us</a></li>
                                 <li class="mt-[10px]"><a href="/features" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out"><i class="uil uil-angle-right-b me-1"></i> Services</a></li>
                                 <li class="mt-[10px]"><a href="/pricing" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out"><i class="uil uil-angle-right-b me-1"></i> Pricing</a></li>
                                 <li class="mt-[10px]"><a href="/blog" class="text-slate-300 hover:text-slate-400 duration-500 ease-in-out"><i class="uil uil-angle-right-b me-1"></i> Blog</a></li>
