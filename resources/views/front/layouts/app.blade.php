@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{{ asset('assets/front/libs/tiny-slider/tiny-slider.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/libs/tobii/css/tobii.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/libs/choices.js/public/assets/styles/choices.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/front/libs/swiper/css/swiper.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/libs/@iconscout/unicons/css/line.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/libs/@mdi/font/css/materialdesignicons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/front/css/tailwind.css') }}" />
@@ -62,6 +63,7 @@
 <script src="{{ asset('assets/front/libs/tiny-slider/min/tiny-slider.js') }}"></script>
 <script src="{{ asset('assets/front/libs/tobii/js/tobii.min.js') }}"></script>
 <script src="{{ asset('assets/front/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
+<script src="{{ asset('assets/front/libs/swiper/js/swiper.min.js') }}"></script>
 <script src="{{ asset('assets/front/libs/feather-icons/feather.min.js') }}"></script>
 <script src="{{ asset('assets/front/js/plugins.init.js') }}"></script>
 <script src="{{ asset('assets/front/js/init.app.js') }}"></script>
