@@ -17,11 +17,20 @@
             <div class="h-48 w-full overflow-hidden">
                 <img
                         x-bind:src="property.property_image_url"
-                        alt="Property image"
-                        class="h-full w-full object-cover object-center
-                           transition-transform duration-500 group-hover:scale-105"
-                        x-on:error="$event.target.src = '{{ asset("assets/admin/images/hero.jpg") }}'"
+                        x-bind:srcset="
+                            Object.entries(property.property_image_responsive || {})
+                                  .map(([w,u]) => `${u} ${w}w`)
+                                  .join(', ')
+                          "
+                        x-bind:sizes="Object.keys(property.property_image_responsive||{}).length
+                            ? '(max-width: 640px) 100vw, 640px'
+                            : ''"
+                        loading="lazy"
+                        class="w-full h-48 object-cover object-center group-hover:scale-105 transition"
+                        alt=""
+                        x-on:error="$event.target.src='{{ asset("assets/admin/images/hero.jpg") }}'"
                 >
+
             </div>
 
             {{-- Top-right badge (“Sale”) --}}

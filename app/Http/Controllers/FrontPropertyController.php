@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PropertyResource;
 use App\Models\Property;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -11,11 +12,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-
+/**
+ * Class FrontPropertyController
+ *
+ * Handles all front-end property endpoints (JSON or Blade) for:
+ *  • featured properties
+ *  • search options
+ *  • property search
+ *  • property detail
+ */
 class FrontPropertyController extends Controller
 {
     /**
-     * Return featured properties (for homepage carousel/sections).
+     * Return a JSON list of “featured” properties (best selling, approved, active).
+     *
+     * Each Property is wrapped in PropertyResource, which includes:
+     *  • all fillable attributes
+     *  • property_image URL
+     *  • property_image_responsive URLs (srcset)
+     *  • gallery_urls
      *
      * @return JsonResponse
      */
@@ -28,14 +43,20 @@ class FrontPropertyController extends Controller
             ->with(['media', 'society'])
             ->orderByDesc('created_at')
             ->limit(6)
-            ->get()
-            ->map(fn($property) => $this->transform($property));
+            ->get();
 
-        return response()->json(['data' => $properties]);
+        return PropertyResource::collection($properties)
+            ->response()
+            ->setStatusCode(200);
     }
 
     /**
-     * Get static property search options (categories, price ranges, etc).
+     * Return static search options for the front-end “search” form:
+     *  • categories (property types)
+     *  • minimum prices
+     *  • maximum prices
+     *
+     * These will be used by the client to populate dropdowns.
      *
      * @return JsonResponse
      */
@@ -44,39 +65,45 @@ class FrontPropertyController extends Controller
         return response()->json([
             'categories' => [
                 ['label' => 'All Categories', 'value' => ''],
-                ['label' => 'Houses', 'value' => 'Houses'],
-                ['label' => 'Apartment', 'value' => 'Apartment'],
-                ['label' => 'Offices', 'value' => 'Offices'],
-                ['label' => 'Townhome', 'value' => 'Townhome'],
+                ['label' => 'Homes',         'value' => 'homes'],
+                ['label' => 'Plots',         'value' => 'plots'],
+                ['label' => 'Apartments',    'value' => 'apartments'],
+                ['label' => 'Shop',          'value' => 'shop'],
+                ['label' => 'Farm Houses',   'value' => 'farm_houses'],
+                ['label' => 'Agri Land',     'value' => 'agriland'],
             ],
             'min_prices' => [
                 ['label' => 'Min Price', 'value' => ''],
-                ['label' => '500', 'value' => '500'],
-                ['label' => '1000', 'value' => '1000'],
-                ['label' => '2000', 'value' => '2000'],
-                ['label' => '3000', 'value' => '3000'],
-                ['label' => '4000', 'value' => '4000'],
-                ['label' => '5000', 'value' => '5000'],
-                ['label' => '6000', 'value' => '6000'],
+                ['label' => '1,000,000',  'value' => '1000000'],
+                ['label' => '5,000,000',  'value' => '5000000'],
+                ['label' => '10,000,000', 'value' => '10000000'],
+                ['label' => '15,000,000', 'value' => '15000000'],
+                ['label' => '20,000,000', 'value' => '20000000'],
             ],
             'max_prices' => [
                 ['label' => 'Max Price', 'value' => ''],
-                ['label' => '500', 'value' => '500'],
-                ['label' => '1000', 'value' => '1000'],
-                ['label' => '2000', 'value' => '2000'],
-                ['label' => '3000', 'value' => '3000'],
-                ['label' => '4000', 'value' => '4000'],
-                ['label' => '5000', 'value' => '5000'],
-                ['label' => '6000', 'value' => '6000'],
+                ['label' => '5,000,000',   'value' => '5000000'],
+                ['label' => '10,000,000',  'value' => '10000000'],
+                ['label' => '15,000,000',  'value' => '15000000'],
+                ['label' => '20,000,000',  'value' => '20000000'],
+                ['label' => '25,000,000',  'value' => '25000000'],
             ],
         ]);
     }
 
-
     /**
-     * Search properties by filter.
+     * Perform a filtered property search.
      *
-     * @param Request $request
+     * Accepts query parameters:
+     *  • purpose     (sale | rent | instalments)
+     *  • category    (homes, plots, apartments, shop, etc.)
+     *  • keyword     (search in title or description, case-insensitive)
+     *  • min_price   (integer)
+     *  • max_price   (integer)
+     *
+     * Returns up to 12 matching properties, wrapped in PropertyResource.
+     *
+     * @param  Request  $request
      * @return JsonResponse
      */
     public function search(Request $request): JsonResponse
@@ -86,80 +113,82 @@ class FrontPropertyController extends Controller
             ->where('status', 'active');
 
         if ($request->filled('purpose')) {
-            $query->where('purpose', $request->purpose);
+            $query->where('purpose', $request->input('purpose'));
         }
+
         if ($request->filled('category')) {
-            $query->where('property_type', $request->category);
+            $query->where('property_type', $request->input('category'));
         }
+
         if ($request->filled('keyword')) {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'ilike', "%{$request->keyword}%")
-                    ->orWhere('description', 'ilike', "%{$request->keyword}%");
+            $keyword = $request->input('keyword');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'ILIKE', "%{$keyword}%")
+                    ->orWhere('description', 'ILIKE', "%{$keyword}%");
             });
         }
+
         if ($request->filled('min_price')) {
-            $query->where('price', '>=', (int) $request->min_price);
-        }
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (int) $request->max_price);
+            $query->where('price', '>=', (int) $request->input('min_price'));
         }
 
-        $properties = $query->with(['media', 'society'])
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', (int) $request->input('max_price'));
+        }
+
+        $properties = $query
+            ->with(['media', 'society'])
             ->orderByDesc('created_at')
             ->limit(12)
-            ->get()
-            ->map(fn($property) => $this->transform($property));
+            ->get();
 
-        return response()->json(['data' => $properties]);
+        return PropertyResource::collection($properties)
+            ->response()
+            ->setStatusCode(200);
     }
 
     /**
-     * Show property details by slug.
+     * Show a single property’s detail.
      *
-     * If the request wants JSON (Axios call to /api/properties/{slug}), this returns JSON.
-     * Otherwise, return the Blade view.
+     * • If the client wants JSON (wantsJson()), return a JSON object with:
+     *   – id, title, address, size, beds, baths, paragraphs of description
+     *   – images[]: either from ‘gallery’ or fallback to single ‘property_image’
+     *   – map_embed, price, status, days_on_market, price_per_sqf, monthly_payment
+     *
+     * • Otherwise, render the Blade template: resources/views/front/property-detail.blade.php
+     *   and pass the Eloquent $property model.
      *
      * @param  Request  $request
      * @param  string   $slug
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * @return Application|Factory|JsonResponse|View
      */
     public function show(Request $request, string $slug)
     {
-        // 1) Load the property or fail with a 404
+        // 1. Load or fail
         $property = Property::where('slug', $slug)
             ->where('approved', true)
             ->where('status', 'active')
             ->firstOrFail();
 
-        // 2) JSON path: build an "images" array from either 'gallery' or fallback to 'property_image'
+        // 2. If JSON requested, build a structured payload
         if ($request->wantsJson()) {
-            // Try to pull _all_ media from the 'gallery' collection:
+            // Gather “gallery” media if exists
             $galleryItems = $property->getMedia('gallery');
 
-            // If gallery is empty, look for a single URL in 'property_image'
             if ($galleryItems->isEmpty()) {
-                // getFirstMediaUrl() returns a string URL or empty string
+                // Fallback to single property_image
                 $singleUrl = $property->getFirstMediaUrl('property_image');
-
-                if ($singleUrl) {
-                    // Instead of trying to wrap a fake Media object, just build a plain array:
-                    $images = [
-                        ['url' => $singleUrl]
-                    ];
-                } else {
-                    // Neither gallery nor property_image had anything
-                    $images = [];
-                }
+                $images = $singleUrl
+                    ? [['url' => $singleUrl]]
+                    : [];
             } else {
-                // Map real Media objects to ['url' => …] arrays
+                // Map each Media to ['url' => …]
                 $images = $galleryItems
-                    ->map(fn(Media $m) => [
-                        'url' => $m->getUrl()
-                    ])
+                    ->map(fn(Media $m) => ['url' => $m->getUrl()])
                     ->all();
             }
 
-            // Split description into paragraphs (same as before)
+            // Break description into paragraphs
             $descriptionParagraphs = [];
             if (!empty($property->description)) {
                 $descriptionParagraphs = array_filter(
@@ -171,59 +200,25 @@ class FrontPropertyController extends Controller
                 'data' => [
                     'id'                     => $property->id,
                     'title'                  => $property->title,
-                    'address'                => $property->location,   // or $property->address if that’s your column
-                    'size'                   => $property->plot_size,  // adjust if your column is different
+                    'address'                => $property->location,
+                    'size'                   => $property->plot_size,
                     'beds'                   => $property->features['beds'] ?? null,
                     'baths'                  => $property->features['baths'] ?? null,
                     'description_paragraphs' => $descriptionParagraphs,
                     'images'                 => $images,
-                    'map_embed'              => $property->map_embed,  // your column name, not map_embed_url
+                    'map_embed'              => $property->map_embed,
                     'price'                  => (float) $property->price,
                     'status'                 => $property->status,
-                    'days_on_market'         => $property->views,       // or whichever logic you use
-                    'price_per_sqf'          => (float) $property->price / (float) ($property->plot_size ?: 1),
-                    'monthly_payment'        => (float) ($property->price / 12),
+                    'days_on_market'         => $property->views,
+                    'price_per_sqf'          => $property->plot_size
+                        ? (float) $property->price / (float) str_replace(' ', '', $property->plot_size)
+                        : null,
+                    'monthly_payment'        => $property->price / 12.0,
                 ]
-            ]);
+            ], 200);
         }
 
-        // 3) Otherwise (web request), render your Blade and pass the $property model
+        // 3. Otherwise render the Blade view
         return view('front.property-detail', compact('property'));
-    }
-
-
-    /**
-     * Transform property for API output.
-     *
-     * @param Property $property
-     * @return array
-     */
-    private function transform(Property $property): array
-    {
-        return [
-            'id' => $property->id,
-            'title' => $property->title,
-            'slug' => $property->slug,
-            'purpose' => $property->purpose,
-            'property_type' => $property->property_type,
-            'area' => $property->plot_size,
-            'beds' => $property->features['beds'] ?? null,
-            'baths' => $property->features['baths'] ?? null,
-            'price' => $property->price,
-            'location' => $property->location,
-            'primary_image_url'  => $property->property_image_url,
-            // Full gallery (used elsewhere, if needed):
-            'gallery'            => $property->getMedia('gallery')
-                ->map(fn($m) => $m->getFullUrl())
-                ->all(),
-            'views'              => $property->views,
-            'whatsapp_number'    => $property->whatsapp_number ?? '',
-            'phone'              => $property->phone ?? '',
-            'society' => $property->society?->name,
-            'created_at' => $property->created_at->toDateString(),
-            'rating' => 5, // Placeholder or real calculation
-            'description' => false ? Str::limit($property->description, 2000) : null,
-            // add any more detailed fields as needed
-        ];
     }
 }

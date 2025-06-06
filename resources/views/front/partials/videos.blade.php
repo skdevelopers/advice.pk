@@ -6,7 +6,7 @@
             <!-- Repeat for each video, ideally make this dynamic from DB -->
             @foreach([
                 [
-                    'link' => 'https://www.youtube.com/watch?v=YnixgTZm_dyk',
+                    'link' => 'https://www.youtube.com/watch?v=nixgTZm_dyk',
                     'thumb' => 'assets/front/images/videos/video1.png',
                 ],
                 [
