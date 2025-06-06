@@ -13,7 +13,7 @@
                         alt="Property image"
                         class="h-full w-full object-cover object-center
                            transition-transform duration-500 group-hover:scale-105"
-                        x-on:error="$event.target.src = '{{ asset("assets/admin/images/hero.jpg") }}'"
+                        x-on:error="$event.target.src = '{{ asset("assets/admin/images/error.png") }}'"
                 >
             </div>
 

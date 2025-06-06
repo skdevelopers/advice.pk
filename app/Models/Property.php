@@ -182,7 +182,7 @@ class Property extends Model implements HasMedia
         }
 
         // 3) If still nothing, ultimate fallback:
-        return asset('assets/admin/images/hero.jpg');
+        return asset('assets/admin/images/error.png');
     }
 
 

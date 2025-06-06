@@ -113,7 +113,7 @@
             function renderCard(p) {
                 // fallback if no media
                 const fallback = p.property_image_url
-                    || "{{ asset('assets/admin/images/hero.jpg') }}";
+                    || "{{ asset('assets/admin/images/error.png') }}";
 
                 // build srcset from the responsive URLs your Resource returned
                 const resp = p.property_image_responsive || {};
