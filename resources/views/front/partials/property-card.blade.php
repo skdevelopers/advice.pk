@@ -1,4 +1,3 @@
-{{-- resources/views/front/partials/property-card.blade.php --}}
 <div
         class="group rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl
            dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700
@@ -8,29 +7,14 @@
 
         {{-- IMAGE + OVERLAYS --}}
         <div class="relative md:shrink-0 md:w-48 w-full">
-            {{--
-                • We force every property‐card image into a 12rem (h-48) box so that
-                  all cards line up exactly.
-                • object-cover crops and centers the photo within that box.
-                • w-full on mobile, md:w-48 on md+ screens matches Hously’s card width.
-            --}}
             <div class="h-48 w-full overflow-hidden">
                 <img
                         x-bind:src="property.property_image_url"
-                        x-bind:srcset="
-                            Object.entries(property.property_image_responsive || {})
-                                  .map(([w,u]) => `${u} ${w}w`)
-                                  .join(', ')
-                          "
-                        x-bind:sizes="Object.keys(property.property_image_responsive||{}).length
-                            ? '(max-width: 640px) 100vw, 640px'
-                            : ''"
-                        loading="lazy"
-                        class="w-full h-48 object-cover object-center group-hover:scale-105 transition"
-                        alt=""
-                        x-on:error="$event.target.src='{{ asset("assets/admin/images/hero.jpg") }}'"
+                        alt="Property image"
+                        class="h-full w-full object-cover object-center
+                           transition-transform duration-500 group-hover:scale-105"
+                        x-on:error="$event.target.src = '{{ asset("assets/admin/images/hero.jpg") }}'"
                 >
-
             </div>
 
             {{-- Top-right badge (“Sale”) --}}
@@ -42,16 +26,13 @@
 
             {{-- Bottom-left: view count + photo count --}}
             <div class="absolute bottom-4 start-4 flex items-center space-x-2">
-                {{-- View count --}}
                 <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1 text-white text-xs">
                     <i data-feather="eye" class="w-4 h-4 mr-1"></i>
                     <span x-text="property.views ?? 0"></span>
                 </div>
-                {{-- Photo count --}}
                 <div class="flex items-center bg-black bg-opacity-50 rounded px-2 py-1 text-white text-xs">
                     <i data-feather="camera" class="w-4 h-4 mr-1"></i>
-                    {{-- If property.images is undefined, show 0 --}}
-                    <span x-text="(property.images && property.images.length) ? property.images.length : 0"></span>
+                    <span x-text="(property.gallery_urls && property.gallery_urls.length) ? property.gallery_urls.length : 0"></span>
                 </div>
             </div>
 
@@ -63,7 +44,6 @@
 
         {{-- DETAILS SECTION --}}
         <div class="p-6 w-full flex flex-col justify-between">
-            {{-- Title + Link --}}
             <div class="md:pb-4 pb-6">
                 <a
                         :href="'/properties/' + property.slug"
@@ -72,13 +52,11 @@
                 ></a>
             </div>
 
-            {{-- Price --}}
             <div class="mb-2">
                 <span class="text-slate-400">Price</span>
                 <p class="text-lg font-medium" x-text="property.price"></p>
             </div>
 
-            {{-- Address --}}
             <div class="mb-4">
                 <span class="text-slate-400 flex items-center">
                     <i class="uil uil-map-marker text-2xl me-2 text-green-600"></i>
@@ -86,7 +64,6 @@
                 </span>
             </div>
 
-            {{-- Specs: Area / Beds / Baths --}}
             <ul class="md:py-4 py-6 border-y border-slate-100 dark:border-gray-800 flex items-center list-none">
                 <li class="flex items-center me-4">
                     <i class="uil uil-compress-arrows text-2xl me-2 text-green-600"></i>
@@ -102,9 +79,7 @@
                 </li>
             </ul>
 
-            {{-- ACTION BUTTONS (CALL / WHATSAPP / MORE DETAIL) --}}
             <div class="mt-6 flex space-x-3">
-                {{-- CALL Button --}}
                 <a
                         :href="'tel:' + property.phone"
                         class="flex-1 btn border border-blue-500 text-blue-500 hover:bg-blue-50
@@ -113,7 +88,6 @@
                     CALL
                 </a>
 
-                {{-- WHATSAPP Button --}}
                 <a
                         :href="'https://wa.me/' + property.whatsapp_number"
                         target="_blank"
@@ -123,7 +97,6 @@
                     WHATSAPP
                 </a>
 
-                {{-- More Detail Button --}}
                 <a
                         :href="'/properties/' + property.slug"
                         class="flex-1 btn bg-blue-600 hover:bg-blue-700 text-white rounded-md

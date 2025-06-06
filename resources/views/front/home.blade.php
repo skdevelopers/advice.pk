@@ -1,5 +1,7 @@
 @extends('front.layouts.app')
+
 @section('title', 'Advice Associates | Real Estate Landing')
+
 @section('content')
     @include('front.partials.hero')
     @include('front.partials.property-tabs')
@@ -11,13 +13,12 @@
 @push('scripts')
     <script>
         function propertyTabs() {
-            return {
-                tab: 'buy'
-            }
+            return { tab: 'buy' }
         }
+
         function propertySearch(type) {
             return {
-                search: { keyword: '', category: '', min_price: '', max_price: '', type: type },
+                search: { keyword: '', category: '', min_price: '', max_price: '', type },
                 options: { categories: [], min_prices: [], max_prices: [] },
                 loading: false,
                 results: [],
@@ -27,7 +28,6 @@
                         .then(res => {
                             this.options = res.data;
                             this.$nextTick(() => {
-                                // Choices.js - re-initialize for dynamically rendered selects
                                 if (window.Choices) {
                                     if (this.$refs.category) new Choices(this.$refs.category, { searchEnabled: false, itemSelectText: '' });
                                     if (this.$refs.minPrice) new Choices(this.$refs.minPrice, { searchEnabled: false, itemSelectText: '' });
@@ -40,9 +40,15 @@
                     this.loading = true;
                     this.searched = true;
                     axios.get('/api/properties/search', { params: this.search })
-                        .then(res => { this.results = res.data.data || []; })
-                        .catch(() => { this.results = []; })
-                        .finally(() => { this.loading = false; });
+                        .then(res => {
+                            this.results = res.data.data || [];
+                        })
+                        .catch(() => {
+                            this.results = [];
+                        })
+                        .finally(() => {
+                            this.loading = false;
+                        });
                 }
             }
         }
@@ -67,6 +73,4 @@
             }
         }
     </script>
-
 @endpush
-

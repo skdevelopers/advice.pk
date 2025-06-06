@@ -9,30 +9,17 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-/**
- * Class FrontPropertyController
- *
- * Handles all front-end property endpoints (JSON or Blade) for:
- *  • featured properties
- *  • search options
- *  • property search
- *  • property detail
- */
 class FrontPropertyController extends Controller
 {
     /**
      * Return a JSON list of “featured” properties (best selling, approved, active).
-     *
-     * Each Property is wrapped in PropertyResource, which includes:
-     *  • all fillable attributes
-     *  • property_image URL
-     *  • property_image_responsive URLs (srcset)
-     *  • gallery_urls
-     *
-     * @return JsonResponse
+     * Wrapped in PropertyResource so each property includes:
+     *   • all fillable attributes
+     *   • property_image_url (largest responsive breakpoint)
+     *   • property_image_responsive (all breakpoints → srcset)
+     *   • gallery_urls
      */
     public function featured(): JsonResponse
     {
@@ -52,13 +39,9 @@ class FrontPropertyController extends Controller
 
     /**
      * Return static search options for the front-end “search” form:
-     *  • categories (property types)
-     *  • minimum prices
-     *  • maximum prices
-     *
-     * These will be used by the client to populate dropdowns.
-     *
-     * @return JsonResponse
+     *   • categories (property types)
+     *   • minimum prices
+     *   • maximum prices
      */
     public function searchOptions(): JsonResponse
     {
@@ -73,15 +56,15 @@ class FrontPropertyController extends Controller
                 ['label' => 'Agri Land',     'value' => 'agriland'],
             ],
             'min_prices' => [
-                ['label' => 'Min Price', 'value' => ''],
-                ['label' => '1,000,000',  'value' => '1000000'],
-                ['label' => '5,000,000',  'value' => '5000000'],
-                ['label' => '10,000,000', 'value' => '10000000'],
-                ['label' => '15,000,000', 'value' => '15000000'],
-                ['label' => '20,000,000', 'value' => '20000000'],
+                ['label' => 'Min Price',   'value' => ''],
+                ['label' => '1,000,000',   'value' => '1000000'],
+                ['label' => '5,000,000',   'value' => '5000000'],
+                ['label' => '10,000,000',  'value' => '10000000'],
+                ['label' => '15,000,000',  'value' => '15000000'],
+                ['label' => '20,000,000',  'value' => '20000000'],
             ],
             'max_prices' => [
-                ['label' => 'Max Price', 'value' => ''],
+                ['label' => 'Max Price',   'value' => ''],
                 ['label' => '5,000,000',   'value' => '5000000'],
                 ['label' => '10,000,000',  'value' => '10000000'],
                 ['label' => '15,000,000',  'value' => '15000000'],
@@ -95,16 +78,13 @@ class FrontPropertyController extends Controller
      * Perform a filtered property search.
      *
      * Accepts query parameters:
-     *  • purpose     (sale | rent | instalments)
-     *  • category    (homes, plots, apartments, shop, etc.)
-     *  • keyword     (search in title or description, case-insensitive)
-     *  • min_price   (integer)
-     *  • max_price   (integer)
+     *   • purpose     (sale | rent | instalments)
+     *   • category    (homes, plots, apartments, shop, etc.)
+     *   • keyword     (search in title or description, case-insensitive)
+     *   • min_price   (integer)
+     *   • max_price   (integer)
      *
-     * Returns up to 12 matching properties, wrapped in PropertyResource.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
+     * Returns up to 12 matching properties wrapped in PropertyResource.
      */
     public function search(Request $request): JsonResponse
     {
@@ -150,45 +130,35 @@ class FrontPropertyController extends Controller
     /**
      * Show a single property’s detail.
      *
-     * • If the client wants JSON (wantsJson()), return a JSON object with:
-     *   – id, title, address, size, beds, baths, paragraphs of description
-     *   – images[]: either from ‘gallery’ or fallback to single ‘property_image’
+     * • If JSON requested (wantsJson()), return a structured payload:
+     *   – id, title, address, size, beds, baths, description paragraphs
+     *   – images[] (gallery or single fallback)
      *   – map_embed, price, status, days_on_market, price_per_sqf, monthly_payment
      *
-     * • Otherwise, render the Blade template: resources/views/front/property-detail.blade.php
+     * • Otherwise, render the Blade view: front.property-detail
      *   and pass the Eloquent $property model.
-     *
-     * @param  Request  $request
-     * @param  string   $slug
-     * @return Application|Factory|JsonResponse|View
      */
     public function show(Request $request, string $slug)
     {
-        // 1. Load or fail
         $property = Property::where('slug', $slug)
             ->where('approved', true)
             ->where('status', 'active')
             ->firstOrFail();
 
-        // 2. If JSON requested, build a structured payload
         if ($request->wantsJson()) {
-            // Gather “gallery” media if exists
             $galleryItems = $property->getMedia('gallery');
 
             if ($galleryItems->isEmpty()) {
-                // Fallback to single property_image
                 $singleUrl = $property->getFirstMediaUrl('property_image');
                 $images = $singleUrl
                     ? [['url' => $singleUrl]]
                     : [];
             } else {
-                // Map each Media to ['url' => …]
                 $images = $galleryItems
                     ->map(fn(Media $m) => ['url' => $m->getUrl()])
                     ->all();
             }
 
-            // Break description into paragraphs
             $descriptionParagraphs = [];
             if (!empty($property->description)) {
                 $descriptionParagraphs = array_filter(
@@ -218,7 +188,6 @@ class FrontPropertyController extends Controller
             ], 200);
         }
 
-        // 3. Otherwise render the Blade view
         return view('front.property-detail', compact('property'));
     }
 }
