@@ -24,22 +24,42 @@ class PropertyResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $data = parent::toArray($request);
+        $f          = $this->features ?? [];
+        $responsive = [];
 
-        $media = $this->getFirstMedia('property_image');
-
-        if ($media) {
-            $data['property_image'] = $media->getUrl();
-            $data['property_image_responsive'] = $media->getResponsiveImageUrls();
-        } else {
-            $data['property_image'] = null;
-            $data['property_image_responsive'] = [];
+        foreach ($this->getMedia('property_image') as $mediaItem) {
+            if (isset($mediaItem->responsive_images['media_library_original']['urls'])) {
+                foreach ($mediaItem->responsive_images['media_library_original']['urls'] as $filename) {
+                    // this assumes Spatie wrote the responsive files to:
+                    // storage/app/public/{mediaId}/responsive-images/{filename}
+                    $responsive[] = asset("storage/{$mediaItem->id}/responsive-images/{$filename}");
+                }
+            } else {
+                // fallback to the original
+                $responsive[] = $mediaItem->getFullUrl();
+            }
         }
+        return [
+            'id'                        => $this->id,
+            'title'                     => $this->title,
+            'name'                      => $this->name,
+            'slug'                      => $this->slug,
+            'price'                     => $this->price,
+            'purpose'                   => $this->purpose,
+            'location'                  => $this->location,
+            'views'                     => $this->views,
+            'plot_size'                 => $this->plot_size,
+            'beds'                      => (int) data_get($f, 'bed_rooms', data_get($f, 'beds', 0)),
+            'baths'                     => (int) data_get($f, 'bath_rooms', data_get($f, 'baths', 0)),
+            'created_at'                => $this->created_at->toDateTimeString(),
 
-        $data['gallery_urls'] = $this->getMedia('gallery')
-            ->map->getUrl()
-            ->all();
+            'property_image_url'        => count($responsive) ? $responsive[0]
+                : asset('assets/admin/images/error.png'),
+            'property_image_responsive' => $responsive,
 
-        return $data;
+            // ← here’s the null-safe guard
+            'society_name'              => $this->society?->name,
+            'society_slug'              => $this->society?->slug,
+        ];
     }
 }

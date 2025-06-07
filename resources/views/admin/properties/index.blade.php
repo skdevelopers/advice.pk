@@ -113,7 +113,7 @@
             function renderCard(p) {
                 // fallback if no media
                 const fallback = p.property_image_url
-                    || "{{ asset('assets/admin/images/error.png') }}";
+                    || "{{ asset('assets/admin/images/property/placeholder.jpg') }}";
 
                 // build srcset from the responsive URLs your Resource returned
                 const resp = p.property_image_responsive || {};
@@ -149,7 +149,6 @@
                           </ul>
                           <div class="flex justify-between items-center mt-4">
                             <span class="font-semibold">PKR ${Number(p.price||0).toLocaleString()}</span>
-                            <span>${renderStars(p.rating||0)} ${(p.rating||0).toFixed(1)}</span>
                           </div>
                         </div>
                       </div>

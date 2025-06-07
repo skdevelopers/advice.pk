@@ -12,7 +12,7 @@
                         alt="Property image"
                         class="h-full w-full object-cover object-center
                  transition-transform duration-500 group-hover:scale-105"
-                        x-on:error="$event.target.src = '{{ asset('assets/admin/images/error.png') }}'"
+                        x-on:error="$event.target.src = '{{ asset('assets/admin/images/property/placeholder.jpg') }}'"
                 >
             </div>
 
@@ -66,7 +66,7 @@
                 {{-- PRICE --}}
                 <div>
                     <span class="text-slate-400 text-sm">Price</span>
-                    <p class="text-xl font-medium text-green-700 dark:text-green-400" x-text="`$${property.price.toLocaleString()}`"></p>
+                    <p class="text-xl font-medium text-green-700 dark:text-green-400" x-text="`PKR: ${property.price.toLocaleString()}`"></p>
                 </div>
 
                 {{-- LOCATION --}}

@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\PropertyResource;
 use App\Models\Property;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -15,21 +12,91 @@ class FrontPropertyController extends Controller
 {
     /**
      * Return a JSON list of “featured” properties (best selling, approved, active).
-     * Wrapped in PropertyResource so each property includes:
-     *   • all fillable attributes
-     *   • property_image_url (largest responsive breakpoint)
-     *   • property_image_responsive (all breakpoints → srcset)
-     *   • gallery_urls
+     * We select only the columns needed by the front-end template, eager‐load a filtered
+     * media relationship, and cache the result for 60 seconds.
      */
     public function featured(): JsonResponse
     {
-        $properties = Property::query()
+        // Cache the featured properties for 60 seconds to reduce DB load
+        $properties = cache()->remember('featured_properties', 60, function() {
+            return Property::query()
+                ->where('approved', true)
+                ->where('status', 'active')
+                ->where('best_selling', true)
+                // Only select the columns you actually use in the template
+                ->select([
+                    'id','title','slug','price','purpose',
+                    'location','views','plot_size','features','created_at',
+                ])
+                ->with([
+                    'media'   => fn($q) => $q
+                        ->where('collection_name','property_image')
+                        ->orderBy('order_column'),
+                    'society:id,name,slug',
+                ])
+                ->orderByDesc('created_at')
+                ->limit(6)
+                ->get();
+        });
+
+        // The PropertyResource will convert each model into exactly the JSON fields the front-end needs,
+        // including building property_image_url and property_image_responsive from the loaded media.
+        return PropertyResource::collection($properties)
+            ->response()
+            ->setStatusCode(200);
+    }
+
+    /**
+     * Perform a filtered property search.
+     *
+     * We only select the columns needed for the search results, eager‐load media and society,
+     * then return at most 12 items. We also avoid large JSON payloads by selecting only
+     * the fields you actually render in your front-end.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $query = Property::query()
             ->where('approved', true)
-            ->where('status', 'active')
-            ->where('best_selling', true)
-            ->with(['media', 'society'])
+            ->where('status', 'active');
+
+        if ($request->filled('purpose')) {
+            $query->where('purpose', $request->input('purpose'));
+        }
+
+        if ($request->filled('category')) {
+            $query->where('property_type', $request->input('category'));
+        }
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'ILIKE', "%{$keyword}%")
+                    ->orWhere('description', 'ILIKE', "%{$keyword}%");
+            });
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', (int) $request->input('min_price'));
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', (int) $request->input('max_price'));
+        }
+
+        // Select only the columns you will show in the search results
+        $properties = $query
+            ->select([
+                'id','title','slug','price','purpose',
+                'location','views','plot_size','features','created_at',
+            ])
+            ->with([
+                'media'   => fn($q) => $q
+                    ->where('collection_name','property_image')
+                    ->orderBy('order_column', 'asc'),
+                'society:id,name,slug',
+            ])
             ->orderByDesc('created_at')
-            ->limit(6)
+            ->limit(12)
             ->get();
 
         return PropertyResource::collection($properties)
@@ -75,90 +142,27 @@ class FrontPropertyController extends Controller
     }
 
     /**
-     * Perform a filtered property search.
-     *
-     * Accepts query parameters:
-     *   • purpose     (sale | rent | instalments)
-     *   • category    (homes, plots, apartments, shop, etc.)
-     *   • keyword     (search in title or description, case-insensitive)
-     *   • min_price   (integer)
-     *   • max_price   (integer)
-     *
-     * Returns up to 12 matching properties wrapped in PropertyResource.
-     */
-    public function search(Request $request): JsonResponse
-    {
-        $query = Property::query()
-            ->where('approved', true)
-            ->where('status', 'active');
-
-        if ($request->filled('purpose')) {
-            $query->where('purpose', $request->input('purpose'));
-        }
-
-        if ($request->filled('category')) {
-            $query->where('property_type', $request->input('category'));
-        }
-
-        if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-            $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'ILIKE', "%{$keyword}%")
-                    ->orWhere('description', 'ILIKE', "%{$keyword}%");
-            });
-        }
-
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', (int) $request->input('min_price'));
-        }
-
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (int) $request->input('max_price'));
-        }
-
-        $properties = $query
-            ->with(['media', 'society'])
-            ->orderByDesc('created_at')
-            ->limit(12)
-            ->get();
-
-        return PropertyResource::collection($properties)
-            ->response()
-            ->setStatusCode(200);
-    }
-
-    /**
      * Show a single property’s detail.
-     *
-     * • If JSON requested (wantsJson()), return a structured payload:
-     *   – id, title, address, size, beds, baths, description paragraphs
-     *   – images[] (gallery or single fallback)
-     *   – map_embed, price, status, days_on_market, price_per_sqf, monthly_payment
-     *
-     * • Otherwise, render the Blade view: front.property-detail
-     *   and pass the Eloquent $property model.
      */
     public function show(Request $request, string $slug)
     {
         $property = Property::where('slug', $slug)
             ->where('approved', true)
             ->where('status', 'active')
+            ->with(['media', 'society'])
             ->firstOrFail();
 
         if ($request->wantsJson()) {
+            // Build gallery images (fallback if none exist)
             $galleryItems = $property->getMedia('gallery');
-
             if ($galleryItems->isEmpty()) {
                 $singleUrl = $property->getFirstMediaUrl('property_image');
-                $images = $singleUrl
-                    ? [['url' => $singleUrl]]
-                    : [];
+                $images = $singleUrl ? [['url' => $singleUrl]] : [];
             } else {
-                $images = $galleryItems
-                    ->map(fn(Media $m) => ['url' => $m->getUrl()])
-                    ->all();
+                $images = $galleryItems->map(fn(Media $m) => ['url' => $m->getUrl()])->all();
             }
 
+            // Split description into paragraphs
             $descriptionParagraphs = [];
             if (!empty($property->description)) {
                 $descriptionParagraphs = array_filter(
@@ -172,8 +176,8 @@ class FrontPropertyController extends Controller
                     'title'                  => $property->title,
                     'address'                => $property->location,
                     'size'                   => $property->plot_size,
-                    'beds'                   => $property->features['beds'] ?? null,
-                    'baths'                  => $property->features['baths'] ?? null,
+                    'beds_rooms'                   => $property->beds_rooms ?? 0,
+                    'baths_rooms'                  => $property->baths_rooms ?? 0,
                     'description_paragraphs' => $descriptionParagraphs,
                     'images'                 => $images,
                     'map_embed'              => $property->map_embed,
