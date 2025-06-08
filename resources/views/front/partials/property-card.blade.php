@@ -81,7 +81,7 @@
                 >
                     <li class="flex items-center space-x-2">
                         <i class="uil uil-compress-arrows text-2xl text-green-600"></i>
-                        <span x-text="property.area + ' sqft'"></span>
+                        <span x-text="property.size + ' sqft'"></span>
                     </li>
                     <li class="flex items-center space-x-2">
                         <i class="uil uil-bed-double text-2xl text-green-600"></i>
