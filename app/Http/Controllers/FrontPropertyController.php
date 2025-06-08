@@ -17,21 +17,22 @@ class FrontPropertyController extends Controller
      */
     public function featured(): JsonResponse
     {
-        // Cache the featured properties for 60 seconds to reduce DB load
         $properties = cache()->remember('featured_properties', 60, function() {
             return Property::query()
                 ->where('approved', true)
                 ->where('status', 'active')
                 ->where('best_selling', true)
-                // Only select the columns you actually use in the template
+                // Only select the columns used in the template
                 ->select([
-                    'id','title','slug','price','purpose',
-                    'location','views','plot_size','features','created_at',
+                    'id', 'title', 'slug', 'price', 'purpose',
+                    'location', 'views', 'plot_size', 'features', 'created_at',
                 ])
                 ->with([
-                    'media'   => fn($q) => $q
-                        ->where('collection_name','property_image')
+                    // only load the main property_image collection, ordered.
+                    'media' => fn($q) => $q
+                        ->where('collection_name', 'property_image')
                         ->orderBy('order_column'),
+                    // grab society name & slug
                     'society:id,name,slug',
                 ])
                 ->orderByDesc('created_at')
@@ -39,8 +40,6 @@ class FrontPropertyController extends Controller
                 ->get();
         });
 
-        // The PropertyResource will convert each model into exactly the JSON fields the front-end needs,
-        // including building property_image_url and property_image_responsive from the loaded media.
         return PropertyResource::collection($properties)
             ->response()
             ->setStatusCode(200);
@@ -48,10 +47,6 @@ class FrontPropertyController extends Controller
 
     /**
      * Perform a filtered property search.
-     *
-     * We only select the columns needed for the search results, eager‐load media and society,
-     * then return at most 12 items. We also avoid large JSON payloads by selecting only
-     * the fields you actually render in your front-end.
      */
     public function search(Request $request): JsonResponse
     {
@@ -60,38 +55,33 @@ class FrontPropertyController extends Controller
             ->where('status', 'active');
 
         if ($request->filled('purpose')) {
-            $query->where('purpose', $request->input('purpose'));
+            $query->where('purpose', $request->purpose);
         }
-
         if ($request->filled('category')) {
-            $query->where('property_type', $request->input('category'));
+            $query->where('property_type', $request->category);
         }
-
         if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-            $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'ILIKE', "%{$keyword}%")
-                    ->orWhere('description', 'ILIKE', "%{$keyword}%");
-            });
+            $keyword = $request->keyword;
+            $query->where(fn($q) =>
+            $q->where('title', 'ILIKE', "%{$keyword}%")
+                ->orWhere('description', 'ILIKE', "%{$keyword}%")
+            );
         }
-
         if ($request->filled('min_price')) {
-            $query->where('price', '>=', (int) $request->input('min_price'));
+            $query->where('price', '>=', (int) $request->min_price);
         }
-
         if ($request->filled('max_price')) {
-            $query->where('price', '<=', (int) $request->input('max_price'));
+            $query->where('price', '<=', (int) $request->max_price);
         }
 
-        // Select only the columns you will show in the search results
         $properties = $query
             ->select([
-                'id','title','slug','price','purpose',
-                'location','views','plot_size','features','created_at',
+                'id', 'title', 'slug', 'price', 'purpose',
+                'location', 'views', 'plot_size', 'features', 'created_at',
             ])
             ->with([
-                'media'   => fn($q) => $q
-                    ->where('collection_name','property_image')
+                'media' => fn($q) => $q
+                    ->where('collection_name', 'property_image')
                     ->orderBy('order_column', 'asc'),
                 'society:id,name,slug',
             ])
@@ -105,10 +95,7 @@ class FrontPropertyController extends Controller
     }
 
     /**
-     * Return static search options for the front-end “search” form:
-     *   • categories (property types)
-     *   • minimum prices
-     *   • maximum prices
+     * Return static search options for the front-end “search” form.
      */
     public function searchOptions(): JsonResponse
     {
@@ -153,7 +140,6 @@ class FrontPropertyController extends Controller
             ->firstOrFail();
 
         if ($request->wantsJson()) {
-            // Build gallery images (fallback if none exist)
             $galleryItems = $property->getMedia('gallery');
             if ($galleryItems->isEmpty()) {
                 $singleUrl = $property->getFirstMediaUrl('property_image');
@@ -162,7 +148,6 @@ class FrontPropertyController extends Controller
                 $images = $galleryItems->map(fn(Media $m) => ['url' => $m->getUrl()])->all();
             }
 
-            // Split description into paragraphs
             $descriptionParagraphs = [];
             if (!empty($property->description)) {
                 $descriptionParagraphs = array_filter(
@@ -176,8 +161,8 @@ class FrontPropertyController extends Controller
                     'title'                  => $property->title,
                     'address'                => $property->location,
                     'size'                   => $property->plot_size,
-                    'beds_rooms'                   => $property->beds_rooms ?? 0,
-                    'baths_rooms'                  => $property->baths_rooms ?? 0,
+                    'beds_rooms'             => $property->features['bed_rooms'] ?? 0,
+                    'baths_rooms'            => $property->features['bath_rooms'] ?? 0,
                     'description_paragraphs' => $descriptionParagraphs,
                     'images'                 => $images,
                     'map_embed'              => $property->map_embed,
@@ -188,7 +173,7 @@ class FrontPropertyController extends Controller
                         ? (float) $property->price / (float) str_replace(' ', '', $property->plot_size)
                         : null,
                     'monthly_payment'        => $property->price / 12.0,
-                ]
+                ],
             ], 200);
         }
 
