@@ -61,7 +61,7 @@
                         <ul class="py-6 border-y border-slate-100 dark:border-gray-800 flex items-center list-none">
                             <li class="flex items-center me-4">
                                 <i class="uil uil-compress-arrows text-2xl me-2 text-green-600"></i>
-                                <span x-text="property.area ? property.area + ' sqft' : '–'"></span>
+                                <span x-text="property.size ? property.size + ' marla' : '–'"></span>
                             </li>
                             <li class="flex items-center me-4">
                                 <i class="uil uil-bed-double text-2xl me-2 text-green-600"></i>

@@ -53,8 +53,12 @@ class PropertyResource extends JsonResource
             'baths'                     => (int) data_get($f, 'bath_rooms', data_get($f, 'baths', 0)),
             'created_at'                => $this->created_at->toDateTimeString(),
 
-            'property_image_url'        => count($responsive) ? $responsive[0]
-                : asset('assets/admin/images/error.png'),
+            // give the browser a real URL
+            'property_image_url'        => count($responsive)
+                ? $responsive[0]
+                : asset('assets/admin/images/property/placeholder.jpg'),
+
+            // full list of full URLs for srcset
             'property_image_responsive' => $responsive,
 
             // ← here’s the null-safe guard
