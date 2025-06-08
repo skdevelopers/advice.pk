@@ -15,7 +15,7 @@
                        transition ease-in-out duration-500"
             >
                 {{-- IMAGE WRAPPER: fixed 16:9 --}}
-                <div class="relative w-full aspect-video overflow-hidden">
+                <div class="relative w-full aspect-square overflow-hidden">
                     <img
                             x-bind:src="
                           property.property_image_responsive.length

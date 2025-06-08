@@ -20,5 +20,9 @@ module.exports = {
       },
     },
   },
+  corePlugins: {
+    // aspectRatio is true by default in v4—only override if you’ve turned it off
+    aspectRatio: true,
+  },
   plugins: [],
 };
