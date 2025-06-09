@@ -81,8 +81,8 @@
                 </a>
                 <div class="sidebar-submenu">
                     <ul>
-                        <li><a href="{{ url('admin/societies') }}">Add New Society Page</a></li>
-                        <li><a href="{{ url('admin/societies/create') }}">View Societies</a></li>
+                        <li><a href="{{ url('admin/society-pages/create') }}">Add New Society Page</a></li>
+                        <li><a href="{{ url('admin/society-pages') }}">View Societies</a></li>
                     </ul>
                 </div>
             </li>

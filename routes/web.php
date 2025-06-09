@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\SocietyController;
+use App\Http\Controllers\Admin\SocietyPageController;
 use App\Http\Controllers\Admin\SubSectorController;
 use App\Http\Controllers\Admin\SubSocietyController;
 use App\Http\Controllers\Auth\AuthController;
@@ -74,6 +75,16 @@ Route::prefix('admin')->group(function () {
     Route::get('properties/blocks/{subsector}',
         [PropertyController::class, 'getBlocks'])
         ->name('admin.properties.blocks');
+
+    Route::resource('society-pages', SocietyPageController::class)->names([
+        'index'   => 'admin.society-pages.index',
+        'create'  => 'admin.society-pages.create',
+        'store'   => 'admin.society-pages.store',
+        'show'    => 'admin.society-pages.show',
+        'edit'    => 'admin.society-pages.edit',
+        'update'  => 'admin.society-pages.update',
+        'destroy' => 'admin.society-pages.destroy',
+    ]);
 
     Route::resource('cities', CityController::class)->names([
         'index'   => 'admin.cities.index',
