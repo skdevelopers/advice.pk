@@ -11,9 +11,9 @@
         <div class="grid grid-cols-1 items-center mt-10">
             <div class="text-center">
                 <h1
-                        class="font-semibold text-black lg:leading-normal leading-normal text-4xl lg:text-6xl mb-6"
+                        class="font-semibold text-black lg:leading-normal leading-normal text-4xl lg:text-6xl mb-2"
                 >
-                    Find the perfect <br>
+                    Find the perfect property<br>
                     <span class="typewrite" data-period="2000" data-type='[ "home", "villa", "office" ]'></span>
                     for you
                 </h1>

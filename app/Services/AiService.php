@@ -13,16 +13,27 @@ use Illuminate\Support\Facades\Http;
 class AiService
 {
     /**
-     * Generate SEO meta data for a given title and city.
+     * Generate SEO metadata for a given title.
      *
      * @param string $title
-     * @param string $city
      * @return array
      * @throws ConnectionException
      */
-    public function generate(string $title, string $city): array
+    public function generate(string $title): array
     {
-        $prompt = "Generate SEO meta title, description, and keywords for a real estate society named '{$title}' in '{$city}'.";
+        $prompt = <<<PROMPT
+                    You are an SEO expert. Based on the given page title, generate:
+                    - A clear and concise SEO Title (max 60 characters)
+                    - A compelling SEO Description (max 150 characters)
+                    - A set of comma-separated SEO Keywords
+                    
+                    Title: "{$title}"
+                    
+                    Respond in the following format:
+                    SEO Title: ...
+                    SEO Description: ...
+                    SEO Keywords: ...
+                    PROMPT;
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
@@ -32,18 +43,20 @@ class AiService
                 ['role' => 'system', 'content' => 'You are an SEO expert.'],
                 ['role' => 'user', 'content' => $prompt],
             ],
-            'max_tokens' => 200,
+            'max_tokens' => 300,
         ]);
 
-        $result = $response->json();
+        $text = $response->json('choices.0.message.content', '');
 
-        $text = $result['choices'][0]['message']['content'] ?? '';
+        // Parse AI response
+        preg_match('/SEO Title:\s*(.+)/i', $text, $titleMatch);
+        preg_match('/SEO Description:\s*(.+)/i', $text, $descMatch);
+        preg_match('/SEO Keywords:\s*(.+)/i', $text, $keywordsMatch);
 
-        // Optional: Parse response cleanly (you may structure your prompt better for exact formatting)
         return [
-            'seo_title' => substr($text, 0, 60), // crude cut, ideally use regex or format request
-            'seo_description' => substr($text, 0, 150),
-            'seo_keywords' => strtolower(str_replace(' ', ', ', $title . ' ' . $city)),
+            'seo_title' => trim($titleMatch[1] ?? substr($text, 0, 60)),
+            'seo_description' => trim($descMatch[1] ?? substr($text, 0, 150)),
+            'seo_keywords' => trim($keywordsMatch[1] ?? ''),
         ];
     }
 }

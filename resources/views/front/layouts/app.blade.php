@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{{ asset('assets/front/css/tailwind.css') }}" />
     <!-- Additional Page-Specific Styles -->
     @stack('styles')
+    @stack('head')
 </head>
 <body class="dark:bg-slate-900">
 

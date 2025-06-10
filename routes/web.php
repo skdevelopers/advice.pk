@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SubSectorController;
 use App\Http\Controllers\Admin\SubSocietyController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\FrontPropertyController;
+use App\Services\AiService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,6 +18,9 @@ Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
     ->name('properties.show');
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
+Route::post('/ai/generate/seo', function (\Illuminate\Http\Request $request) {
+    return app(AiService::class)->generate($request->title, $request->city);
+})->name('ai.generate.seo');
 
 // Admin Routes - No Auth Middleware for now
 Route::prefix('admin')->group(function () {

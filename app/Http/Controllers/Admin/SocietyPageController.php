@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SocietyPage;
 use App\Services\AiService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -50,6 +51,7 @@ class SocietyPageController extends Controller
      * @param Request $request
      * @param AiService $aiService
      * @return JsonResponse
+     * @throws ConnectionException
      */
     public function store(Request $request, AiService $aiService): JsonResponse
     {
@@ -65,8 +67,8 @@ class SocietyPageController extends Controller
         $data['user_id'] = auth()->id();
         $data['domain'] = request()->getHost();
 
-        if (empty($data['meta_keywords']) || empty($data['meta_description'])) {
-            $seo = $aiService->generate($data['title'], 'Pakistan');
+        if (($title = $data['title'] ?? $data['name'] ?? null) && (empty($data['meta_keywords']) || empty($data['meta_description']))) {
+            $seo = $aiService->generate($title);
             $data['meta_keywords'] ??= $seo['seo_keywords'];
             $data['meta_description'] ??= $seo['seo_description'];
         }
@@ -99,6 +101,7 @@ class SocietyPageController extends Controller
      * @param SocietyPage $societyPage
      * @param AiService $aiService
      * @return JsonResponse
+     * @throws ConnectionException
      */
     public function update(Request $request, SocietyPage $societyPage, AiService $aiService): JsonResponse
     {
@@ -111,8 +114,10 @@ class SocietyPageController extends Controller
             'meta_description' => 'nullable|string',
         ]);
 
-        if (empty($data['meta_keywords']) || empty($data['meta_description'])) {
-            $seo = $aiService->generate($data['title'], 'Pakistan');
+        $title = $data['title'] ?? $data['name'] ?? null;
+
+        if ($title && (empty($data['meta_keywords']) || empty($data['meta_description']))) {
+            $seo = $aiService->generate($title);
             $data['meta_keywords'] ??= $seo['seo_keywords'];
             $data['meta_description'] ??= $seo['seo_description'];
         }
