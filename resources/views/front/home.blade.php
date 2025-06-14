@@ -54,6 +54,7 @@
                               style="aspect-ratio:1/1"
                             />
                             ${badge}
+                             <span class="flex items-center gap-1"><i class="uil uil-eye"></i>${views}</span>
                             <div class="absolute bottom-0 left-0 right-0 z-20 bg-black bg-opacity-50 text-white text-xs px-3 py-2 flex justify-between items-center">
                               <span class="flex items-center gap-1"><i class="uil uil-eye"></i>${views}</span>
                               <span class="flex items-center gap-1"><i class="uil uil-camera"></i>${gallery_count}</span>
@@ -74,20 +75,37 @@
                                 <li class="flex items-center gap-1"><i class="uil uil-bath text-green-600"></i>${baths} Baths</li>
                               </ul>
                             </div>
-                            <div class="mt-4 flex">
-                              <a href="tel:${phone}"
-                                 class="flex-1 border border-blue-500 text-blue-500 rounded-l-full px-3 py-2 flex items-center justify-center">
-                                <i class="uil uil-phone text-lg"></i>
+                            <!-- DETAILS & BUTTONS -->
+                            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                              <!-- PHONE -->
+                              <a
+                                href="tel:${property.phone||'#'}"
+                                class="btn flex-1 sm:flex-none w-full sm:w-auto border border-blue-500 text-blue-500 rounded-full px-4 py-2 text-sm flex items-center justify-center"
+                              >
+                                <i class="uil uil-phone mr-2"></i>
+                                CALL
                               </a>
-                              <a href="https://wa.me/${whatsapp_number}" target="_blank"
-                                 class="flex-1 bg-green-600 text-white px-3 py-2 flex items-center justify-center">
-                                <i class="uil uil-whatsapp text-lg"></i>
+
+                              <!-- WHATSAPP -->
+                              <a
+                                href="https://wa.me/${property.whatsapp_number||''}"
+                                target="_blank"
+                                class="btn flex-1 sm:flex-none w-full sm:w-auto bg-green-600 text-white rounded-full px-4 py-2 text-sm flex items-center justify-center"
+                              >
+                                <i class="uil uil-whatsapp mr-2"></i>
+                                WHATSAPP
                               </a>
-                              <a href="/properties/${slug}"
-                                 class="flex-1 border border-blue-500 text-blue-500 rounded-r-full px-4 py-2 flex items-center justify-center">
-                                <i class="uil uil-angle-right-b mr-1"></i>MORE
+
+                              <!-- DETAILS -->
+                              <a
+                                href="/properties/${property.slug}"
+                                class="btn flex-1 sm:flex-none w-full sm:w-auto border border-blue-500 text-blue-500 rounded-full px-4 py-2 text-sm flex items-center justify-center"
+                              >
+                                <i class="uil uil-angle-right-b mr-2"></i>
+                                MORE
                               </a>
                             </div>
+
                           </div>
                         </div>`;
             };
