@@ -7,6 +7,91 @@
               as="image"
               fetchpriority="high"
               href="{{ $featuredProperties[0]['property_image_url'] ?? asset('assets/admin/images/property/placeholder.jpg') }}">
+        <script>
+            window.renderPropertyCard = function(property) {
+                // 1) Fallback image
+                const PH = '/assets/admin/images/property/placeholder.jpg';
+
+                // 2) Destructure with defaults
+                const {
+                    title = 'No Title',
+                    property_image_url,
+                    slug = '#',
+                    price = 0,
+                    views = 0,
+                    gallery_count = 0,
+                    id = 0,
+                    beds = 0,
+                    baths = 0,
+                    plot_size = 0,
+                    today_deal = false,
+                    purpose = '',
+                    phone = '#',
+                    whatsapp_number = ''
+                } = property;
+
+                const imgSrc   = property_image_url || PH;
+                const fmtPrice = new Intl.NumberFormat().format(price);
+
+                // 3) SALE / RENT badge
+                let badge = '';
+                if (today_deal) {
+                    badge = `<div class="absolute top-2 right-2 z-30 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded">SALE</div>`;
+                } else if (purpose === 'rent') {
+                    badge = `<div class="absolute top-2 right-2 z-30 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded">RENT</div>`;
+                }
+
+                return `
+                        <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl flex flex-col h-full">
+                          <!-- IMAGE + OVERLAYS -->
+                          <div class="relative w-full aspect-square overflow-hidden">
+                            <img
+                              src="${imgSrc}"
+                              alt="${title}"
+                              loading="lazy"
+                              onerror="this.src='${PH}'"
+                              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                              style="aspect-ratio:1/1"
+                            />
+                            ${badge}
+                            <div class="absolute bottom-0 left-0 right-0 z-20 bg-black bg-opacity-50 text-white text-xs px-3 py-2 flex justify-between items-center">
+                              <span class="flex items-center gap-1"><i class="uil uil-eye"></i>${views}</span>
+                              <span class="flex items-center gap-1"><i class="uil uil-camera"></i>${gallery_count}</span>
+                              <span class="flex items-center gap-1"><i class="uil uil-id-badge"></i>${id}</span>
+                            </div>
+                          </div>
+
+                          <!-- DETAILS & BUTTONS -->
+                          <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
+                            <div>
+                              <a href="/properties/${slug}" class="block text-lg font-medium mb-2 hover:text-green-600">
+                                ${title}
+                              </a>
+                              <div class="text-green-600 font-bold text-xl mb-3">PKR: ${fmtPrice}</div>
+                              <ul class="flex items-center space-x-6 text-slate-600 dark:text-slate-300 text-sm mb-4">
+                                <li class="flex items-center gap-1"><i class="uil uil-compress-arrows text-green-600"></i>${plot_size} Marla</li>
+                                <li class="flex items-center gap-1"><i class="uil uil-bed-double text-green-600"></i>${beds} Beds</li>
+                                <li class="flex items-center gap-1"><i class="uil uil-bath text-green-600"></i>${baths} Baths</li>
+                              </ul>
+                            </div>
+                            <div class="mt-4 flex">
+                              <a href="tel:${phone}"
+                                 class="flex-1 border border-blue-500 text-blue-500 rounded-l-full px-3 py-2 flex items-center justify-center">
+                                <i class="uil uil-phone text-lg"></i>
+                              </a>
+                              <a href="https://wa.me/${whatsapp_number}" target="_blank"
+                                 class="flex-1 bg-green-600 text-white px-3 py-2 flex items-center justify-center">
+                                <i class="uil uil-whatsapp text-lg"></i>
+                              </a>
+                              <a href="/properties/${slug}"
+                                 class="flex-1 border border-blue-500 text-blue-500 rounded-r-full px-4 py-2 flex items-center justify-center">
+                                <i class="uil uil-angle-right-b mr-1"></i>MORE
+                              </a>
+                            </div>
+                          </div>
+                        </div>`;
+            };
+        </script>
     @endpush
 @endonce
 
@@ -20,51 +105,7 @@
 
 @push('scripts')
     <script>
-        window.renderPropertyCard = function (property) {
-            return `
-            <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-500 flex flex-col h-full">
-                <div class="relative w-full aspect-square overflow-hidden">
-                    <img src="${property.property_image_url}" alt="Featured Property"
-                        loading="lazy"
-                        class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                        style="aspect-ratio: 1 / 1"
-                        onerror="this.src=window.PLACEHOLDER_IMG" />
-                    ${(property.today_deal || property.purpose === 'rent')
-                ? `<div class="absolute top-3 right-3 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded">${property.today_deal ? 'Sale' : 'Rent'}</div>`
-                : ''}
-                </div>
-                <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
-                    <div>
-                        <a href="/properties/${property.slug}"
-                            class="block text-lg font-medium mb-2 hover:text-green-600 transition line-clamp-2">${property.title}</a>
-                        <div class="mb-4">
-                            <span class="text-sm text-slate-400">Price</span>
-                            <p class="text-xl font-bold text-green-600">PKR: ${new Intl.NumberFormat().format(property.price)}</p>
-                        </div>
-                        <ul class="flex items-center space-x-6 text-slate-600 dark:text-slate-300">
-                            <li class="flex items-center space-x-1">
-                                <i class="uil uil-compress-arrows text-xl text-green-600"></i>
-                                <span>${property.plot_size}</span>
-                            </li>
-                            <li class="flex items-center space-x-1">
-                                <i class="uil uil-bed-double text-xl text-green-600"></i>
-                                <span>${property.beds || 0} Beds</span>
-                            </li>
-                            <li class="flex items-center space-x-1">
-                                <i class="uil uil-bath text-xl text-green-600"></i>
-                                <span>${property.baths || 0} Baths</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="mt-6 flex gap-3">
-                        <a href="tel:${property.phone || '#'}" class="btn border border-blue-500 text-blue-500 !rounded-full px-4 py-2 text-sm hidden sm:inline">CALL</a>
-                        <a href="https://wa.me/${property.whatsapp_number || ''}" target="_blank" class="btn bg-green-600 text-white !rounded-full px-4 py-2 text-sm hidden sm:inline">WHATSAPP</a>
-                        <button type="button" onclick="window.location.href = '/properties/${property.slug}'" class="btn bg-blue-600 text-white !rounded-full px-4 py-2 text-sm hidden sm:inline">VIEW DETAILS</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        }
+
         function propertyTabs() {
             return { tab: 'buy' }
         }
