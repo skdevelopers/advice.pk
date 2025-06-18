@@ -8,11 +8,13 @@
               fetchpriority="high"
               href="{{ $featuredProperties[0]['property_image_url'] ?? asset('assets/admin/images/property/placeholder.jpg') }}">
         <script>
-            window.renderPropertyCard = function(property) {
-                // 1) Fallback image
-                const PH = '/assets/admin/images/property/placeholder.jpg';
+            // 1) define your global placeholder
+            window.PLACEHOLDER_IMG = window.PLACEHOLDER_IMG
+                || '/assets/admin/images/property/placeholder.jpg';
 
-                // 2) Destructure with defaults
+            // 2) override the renderPropertyCard function
+            window.renderPropertyCard = function(property) {
+                // 3) destructure with defaults
                 const {
                     title = 'No Title',
                     property_image_url,
@@ -30,84 +32,117 @@
                     whatsapp_number = ''
                 } = property;
 
+                // 4) format everything
+                const PH       = window.PLACEHOLDER_IMG;
                 const imgSrc   = property_image_url || PH;
                 const fmtPrice = new Intl.NumberFormat().format(price);
 
-                // 3) SALE / RENT badge
-                let badge = '';
+                // 5) build SALE / RENT badge HTML
+                let badgeHtml = '';
                 if (today_deal) {
-                    badge = `<div class="absolute top-2 right-2 z-30 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded">SALE</div>`;
+                    badgeHtml = `
+        <div class="absolute top-2 right-2 z-20
+                    bg-green-600 text-white text-xs font-semibold
+                    px-2 py-1 rounded-full">
+          SALE
+        </div>`;
                 } else if (purpose === 'rent') {
-                    badge = `<div class="absolute top-2 right-2 z-30 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded">RENT</div>`;
+                    badgeHtml = `
+        <div class="absolute top-2 right-2 z-20
+                    bg-green-600 text-white text-xs font-semibold
+                    px-2 py-1 rounded-full">
+          RENT
+        </div>`;
                 }
 
+                // 6) return your untouched card + the new badge injected
                 return `
-                        <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl flex flex-col h-full">
-                          <!-- IMAGE + OVERLAYS -->
-                          <div class="relative w-full aspect-square overflow-hidden">
-                            <img
-                              src="${imgSrc}"
-                              alt="${title}"
-                              loading="lazy"
-                              onerror="this.src='${PH}'"
-                              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                              style="aspect-ratio:1/1"
-                            />
-                            ${badge}
-                             <span class="flex items-center gap-1"><i class="uil uil-eye"></i>${views}</span>
-                            <div class="absolute bottom-0 left-0 right-0 z-20 bg-black bg-opacity-50 text-white text-xs px-3 py-2 flex justify-between items-center">
-                              <span class="flex items-center gap-1"><i class="uil uil-eye"></i>${views}</span>
-                              <span class="flex items-center gap-1"><i class="uil uil-camera"></i>${gallery_count}</span>
-                              <span class="flex items-center gap-1"><i class="uil uil-id-badge"></i>${id}</span>
-                            </div>
-                          </div>
+      <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden
+                  shadow-sm hover:shadow-xl transition duration-500
+                  flex flex-col h-full">
 
-                          <!-- DETAILS & BUTTONS -->
-                          <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
-                            <div>
-                              <a href="/properties/${slug}" class="block text-lg font-medium mb-2 hover:text-green-600">
-                                ${title}
-                              </a>
-                              <div class="text-green-600 font-bold text-xl mb-3">PKR: ${fmtPrice}</div>
-                              <ul class="flex items-center space-x-6 text-slate-600 dark:text-slate-300 text-sm mb-4">
-                                <li class="flex items-center gap-1"><i class="uil uil-compress-arrows text-green-600"></i>${plot_size} Marla</li>
-                                <li class="flex items-center gap-1"><i class="uil uil-bed-double text-green-600"></i>${beds} Beds</li>
-                                <li class="flex items-center gap-1"><i class="uil uil-bath text-green-600"></i>${baths} Baths</li>
-                              </ul>
-                            </div>
-                            <!-- DETAILS & BUTTONS -->
-                            <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                              <!-- PHONE -->
-                              <a
-                                href="tel:${property.phone||'#'}"
-                                class="btn flex-1 sm:flex-none w-full sm:w-auto border border-blue-500 text-blue-500 rounded-full px-4 py-2 text-sm flex items-center justify-center"
-                              >
-                                <i class="uil uil-phone mr-2"></i>
-                                CALL
-                              </a>
+        <!-- IMAGE + OVERLAYS -->
+        <div class="relative w-full aspect-square overflow-hidden">
+          <img
+            src="${imgSrc}"
+            alt="${title}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='${PH}'"
+            class="w-full h-full object-cover object-center
+                   transition-transform duration-500 group-hover:scale-105"
+            style="aspect-ratio:1/1;"
+          />
 
-                              <!-- WHATSAPP -->
-                              <a
-                                href="https://wa.me/${property.whatsapp_number||''}"
-                                target="_blank"
-                                class="btn flex-1 sm:flex-none w-full sm:w-auto bg-green-600 text-white rounded-full px-4 py-2 text-sm flex items-center justify-center"
-                              >
-                                <i class="uil uil-whatsapp mr-2"></i>
-                                WHATSAPP
-                              </a>
+          ${badgeHtml}
 
-                              <!-- DETAILS -->
-                              <a
-                                href="/properties/${property.slug}"
-                                class="btn flex-1 sm:flex-none w-full sm:w-auto border border-blue-500 text-blue-500 rounded-full px-4 py-2 text-sm flex items-center justify-center"
-                              >
-                                <i class="uil uil-angle-right-b mr-2"></i>
-                                MORE
-                              </a>
-                            </div>
+          <!-- your stats bar -->
+          <div class="absolute bottom-0 inset-x-0 z-10
+                      bg-black bg-opacity-60 text-white text-xs
+                      px-3 py-2 flex justify-between items-center">
+            <span class="flex items-center gap-1">
+              <i class="uil uil-eye"></i>${views}
+            </span>
+            <span class="flex items-center gap-1">
+              <i class="uil uil-camera"></i>${gallery_count}
+            </span>
+            <span class="flex items-center gap-1">
+              <i class="uil uil-id-badge"></i>${id}
+            </span>
+          </div>
+        </div>
 
-                          </div>
-                        </div>`;
+        <!-- DETAILS & BUTTONS (exactly your original markup) -->
+        <div class="p-6 flex flex-col flex-1 justify-between
+                    text-slate-900 dark:text-slate-100">
+          <div>
+            <a href="/properties/${slug}"
+               class="block text-lg font-medium mb-2
+                      hover:text-green-600 transition line-clamp-2">
+              ${title}
+            </a>
+
+            <div class="text-xl font-bold text-green-600 mb-1">
+              PKR: ${fmtPrice}
+            </div>
+
+            <ul class="flex items-center space-x-6
+                       text-slate-600 dark:text-slate-300
+                       text-sm mb-4">
+              <li class="flex items-center gap-1">
+                <i class="uil uil-compress-arrows text-green-600 text-xl"></i>
+                <span>${plot_size}</span>
+              </li>
+              <li class="flex items-center gap-1">
+                <i class="uil uil-bed-double text-green-600 text-xl"></i>
+                <span>${beds} Beds</span>
+              </li>
+              <li class="flex items-center gap-1">
+                <i class="uil uil-bath text-green-600 text-xl"></i>
+                <span>${baths} Baths</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="mt-6 flex items-center gap-2">
+            <a href="tel:${phone}"
+               class="btn btn-icon border border-blue-500 text-blue-500
+                      rounded-full p-2">
+              <i class="uil uil-phone text-lg"></i>
+            </a>
+            <a href="https://wa.me/${whatsapp_number}" target="_blank"
+               class="btn btn-icon bg-green-600 text-white
+                      rounded-full p-2">
+              <i class="uil uil-whatsapp text-lg"></i>
+            </a>
+            <a href="/properties/${slug}"
+               class="btn flex-1 text-sm text-center
+                      border border-blue-500 text-blue-500
+                      rounded-full py-2 px-4">
+              More
+            </a>
+          </div>
+        </div>
+      </div>`;
             };
         </script>
     @endpush

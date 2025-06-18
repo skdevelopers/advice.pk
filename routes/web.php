@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CityController;
+use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\SocietyController;
 use App\Http\Controllers\Admin\SocietyPageController;
@@ -79,6 +80,19 @@ Route::prefix('admin')->group(function () {
     Route::get('properties/blocks/{subsector}',
         [PropertyController::class, 'getBlocks'])
         ->name('admin.properties.blocks');
+
+    Route::resource('projects', ProjectController::class)->names([
+        'index'   => 'admin.projects.index',
+        'create'  => 'admin.projects.create',
+        'store'   => 'admin.projects.store',
+        'show'    => 'admin.projects.show',
+        'edit'    => 'admin.projects.edit',
+        'update'  => 'admin.projects.update',
+        'destroy' => 'admin.projects.remove',
+    ]);
+
+    Route::post('projects/{id}/restore', [ProjectController::class, 'restore'])
+        ->name('admin.projects.restore');
 
     Route::resource('society-pages', SocietyPageController::class)->names([
         'index'   => 'admin.society-pages.index',
