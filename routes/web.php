@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\PropertyController;
@@ -29,6 +30,20 @@ Route::prefix('admin')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard.index'); // resources/views/admin/index.blade.php
     })->name('admin.dashboard');
+
+    Route::resource('blogs', BlogController::class)->names([
+        'index'   => 'admin.blogs.index',
+        'create'  => 'admin.blogs.create',
+        'store'   => 'admin.blogs.store',
+        'show'    => 'admin.blogs.show',
+        'edit'    => 'admin.blogs.edit',
+        'update'  => 'admin.blogs.update',
+        'destroy' => 'admin.blogs.remove',
+    ]);
+
+// Soft‐delete restore endpoint
+    Route::post('blogs/{id}/restore', [BlogController::class, 'restore'])
+        ->name('admin.blogs.restore');
 
     Route::resource('/societies', SocietyController::class)->names([
         'index'   => 'admin.societies.index',
