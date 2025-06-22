@@ -77,7 +77,7 @@ class ProjectController extends Controller
 
         $project = Project::create([
             ...$data,
-            'user_id' => Auth::id(),
+            'user_id' => auth()->id() ?? 1,
             'domain'  => $request->get('domain', 'advice.pk'),
             'slug'    => $data['slug'] ?? Str::slug($data['title']),
         ]);
