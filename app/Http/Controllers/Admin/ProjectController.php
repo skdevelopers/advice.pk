@@ -30,7 +30,11 @@ class ProjectController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
-        $projects = Project::latest()->with('media')->get();
+        $query = $request->boolean('trashed')
+            ? Project::onlyTrashed()
+            : Project::query();
+
+        $projects = $query->latest()->with('media')->get();
 
         if ($request->expectsJson()) {
             return response()->json(['data' => $projects]);
@@ -38,6 +42,7 @@ class ProjectController extends Controller
 
         return view('admin.projects.index', compact('projects'));
     }
+
 
     /**
      * Show the form for creating a new project.
@@ -151,6 +156,38 @@ class ProjectController extends Controller
 
         return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully.');
     }
+
+    /**
+     * Display a single project with media (for Axios + Blade view).
+     *
+     * @param Project $project
+     * @param Request $request
+     * @return View|JsonResponse
+     */
+    public function show(Project $project, Request $request): View|JsonResponse
+    {
+        $project->load('media');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                ...$project->toArray(),
+                'gallery' => $project->getMedia('gallery')->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'original_url' => $media->getUrl(),
+                        'thumb_url'    => $media->getUrl('thumb'),
+                    ];
+                }),
+                'floor_plan' => $project->getFirstMedia('floor_plan') ? [
+                    'id' => $project->getFirstMedia('floor_plan')->id,
+                    'original_url' => $project->getFirstMedia('floor_plan')->getUrl()
+                ] : null,
+            ]);
+        }
+
+        return view('admin.projects.show', compact('project'));
+    }
+
 
     /**
      * Remove a project (soft delete).
