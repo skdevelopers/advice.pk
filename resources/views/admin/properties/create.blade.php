@@ -36,7 +36,7 @@
                           class="space-y-6">
 
                         {{-- Hidden fields --}}
-                        <input type="hidden" name="status" value="active">
+                        <input type="hidden" name="status" value="enabled">
                         <input type="hidden" name="user_id" :value="form.user_id">
                         <input type="hidden" name="created_by" :value="form.created_by">
 
@@ -450,7 +450,7 @@
                     video: '', short_video: '',
                     best_selling: false, today_deal: false, mail_send: false,
                     longitude: '', latitude: '',
-                    status: 'active',
+                    status: 'enabled',
                     property_image: ''
                 },
                 errors: {},
@@ -540,7 +540,7 @@
                 },
 
                 init() {
-                    // auto-slugify whenever title changes
+                    // auto-slugify whenever the title changes
                     this.$watch('form.title', (val) => {
                         this.form.slug = val
                             .trim()

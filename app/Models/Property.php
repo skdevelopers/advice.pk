@@ -181,7 +181,7 @@ class Property extends Model implements HasMedia
             return collect($responsive)->last() ?? $firstGallery->getUrl();
         }
 
-        // 3) If still nothing, ultimate fallback:
+        // 3) If still nothing, the ultimate fallback:
         return asset('assets/admin/images/property/placeholder.jpg');
     }
 

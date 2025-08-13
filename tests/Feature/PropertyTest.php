@@ -43,8 +43,8 @@ it('can create a property with media', function () {
         ->assertSessionHas('success');
 
     $prop = Property::where('slug','my-plot')->firstOrFail();
-    expect($prop->getFirstMediaUrl('main_image'))->toContain('house.jpg');
-    expect($prop->getMedia('gallery'))->toHaveCount(2);
+    expect($prop->getFirstMediaUrl('main_image'))->toContain('house.jpg')
+        ->and($prop->getMedia('gallery'))->toHaveCount(2);
 });
 
 it('can update a property', function () {

@@ -91,7 +91,7 @@ class SubSectorController extends Controller
             // Optional: regenerate SEO metadata
              $seo = $this->seoService->generate($validated['name'], Society::find($validated['society_id'])->name);
 
-            // Create subSector‐sector record
+            // Create subSector record
             $subSector = SubSector::create([
                 'society_id'    => $validated['society_id'],
                 'parent_id'     => $validated['parent_id'] ?? null,
