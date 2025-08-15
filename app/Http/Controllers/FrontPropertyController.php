@@ -11,38 +11,39 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class FrontPropertyController extends Controller
 {
     /**
-     * Return a JSON list of “featured” properties (best selling, approved, active).
-     * We select only the columns needed by the front-end template, eager‐load a filtered
-     * media relationship, and cache the result for 60 seconds.
+     * Return a JSON list of “featured” properties (approved + enabled + best_selling/today_deal/featured).
+     * - Only selects columns needed by the front-end.
+     * - Eager loads media (property_image) and society name/slug.
+     * - Caches for 60 seconds.
+     *
+     * @return JsonResponse
      */
     public function featured(): JsonResponse
     {
-        $properties = cache()->remember('featured_properties', 60, function() {
+        $properties = cache()->remember('featured_properties', 60, static function () {
             return Property::query()
-                ->where('approved', true)
-                ->where('status', 'active')
-                ->where('best_selling', true)
-                // Only select the columns used in the template
+                ->approved()        // approved = true
+                ->enabled()         // status = 'enabled'
+                ->featured()        // best_selling | today_deal | (is_featured/featured if exist)
                 ->select([
                     'id', 'title', 'slug', 'price', 'purpose',
-                    'location', 'views', 'plot_size', 'features', 'created_at',
+                    'location', 'views', 'plot_size', 'created_at',
+                    // if you have beds/baths columns, include them:
+                    //'beds', 'baths',
                 ])
                 ->with([
-                    // only load the main property_image collection, ordered.
-                    'media' => fn($q) => $q
-                        ->where('collection_name', 'property_image')
-                        ->orderBy('order_column'),
-                    // grab society name & slug
+                    'media' => static function ($q) {
+                        $q->where('collection_name', 'property_image')
+                            ->orderBy('order_column');
+                    },
                     'society:id,name,slug',
                 ])
                 ->orderByDesc('created_at')
-                ->limit(6)
+                ->limit(12)
                 ->get();
         });
 
-        return PropertyResource::collection($properties)
-            ->response()
-            ->setStatusCode(200);
+        return PropertyResource::collection($properties)->response();
     }
 
     /**
@@ -52,7 +53,7 @@ class FrontPropertyController extends Controller
     {
         $query = Property::query()
             ->where('approved', true)
-            ->where('status', 'active');
+            ->where('status', 'enabled');
 
         if ($request->filled('purpose')) {
             $query->where('purpose', $request->purpose);
@@ -135,7 +136,7 @@ class FrontPropertyController extends Controller
     {
         $property = Property::where('slug', $slug)
             ->where('approved', true)
-            ->where('status', 'active')
+            ->where('status', 'enabled')
             ->with(['media', 'society'])
             ->firstOrFail();
 
