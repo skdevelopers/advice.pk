@@ -1,15 +1,23 @@
 @extends('front.layouts.app')
 
 @section('title', 'Advice Associates | Real Estate Landing')
+
 @once
     @push('head')
-        <link rel="preload" as="image" fetchpriority="high"
-              href="{{ $featuredProperties[0]['property_image_url'] ?? asset('assets/front/images/placeholder.jpg') }}">
-        <script>
-            // keep existing placeholder
-            window.PLACEHOLDER_IMG = window.PLACEHOLDER_IMG
-                || '{{ asset("assets/front/images/placeholder.jpg") }}';
+        {{-- CHANGE #1: Preload only when there is a real first image; do NOT preload the placeholder --}}
+        @if(!empty($featuredProperties[0]['property_image_url']))
+            <link rel="preload"
+                  as="image"
+                  fetchpriority="high"
+                  href="{{ $featuredProperties[0]['property_image_url'] }}">
+        @endif
 
+        <script>
+            // Keep existing placeholder (Blade-only, no PHP short tags)
+            window.PLACEHOLDER_IMG = window.PLACEHOLDER_IMG
+                || '{{ asset('assets/front/images/placeholder.jpg') }}';
+
+            // Card renderer (unchanged layout; overlay positions preserved)
             window.renderPropertyCard = function (property) {
                 const {
                     title = 'Advice Associates',
@@ -34,94 +42,95 @@
 
                 // Badge text
                 const badge = (today_deal || purpose === 'sale') ? 'SALE'
-                    : (purpose === 'rent') ? 'RENT' : '';
+                    : (purpose === 'rent') ? 'RENT'
+                        : '';
 
                 return `
-                          <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-500 flex flex-col h-full">
+      <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-500 flex flex-col h-full">
 
-                            <!-- IMAGE + OVERLAYS -->
-                            <div class="relative isolate w-full aspect-square overflow-hidden">
-                              <img
-                                src="${imgSrc}"
-                                alt="${title}"
-                                loading="lazy"
-                                onerror="this.onerror=null;this.src='${PH}'"
-                                class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 z-0"
-                              />
+        <!-- IMAGE + OVERLAYS -->
+        <div class="relative isolate w-full aspect-square overflow-hidden">
+          <img
+            src="${imgSrc}"
+            alt="${title}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='${PH}'"
+            class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 z-0"
+          />
 
-                              ${badge ? `
-                              <!-- top-right badge -->
-                              <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-start justify-end">
-                                <span class="pointer-events-auto bg-green-600 text-white text-xs font-semibold uppercase px-2 py-1 rounded-full">
-                                  ${badge}
-                                </span>
-                              </div>` : ''}
+          ${badge ? `
+          <!-- top-right badge -->
+          <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-start justify-end">
+            <span class="pointer-events-auto bg-green-600 text-white text-xs font-semibold uppercase px-3 py-2 rounded-sm">
+              ${badge}
+            </span>
+          </div>` : ''}
 
-                              <!-- bottom-left: views + photos -->
-                              <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-start">
-                                <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-2 py-1 flex items-center gap-3">
-                                  <span class="flex items-center gap-1">
-                                    <i class="uil uil-eye"></i><span>${views}</span>
-                                  </span>
-                                  <span class="flex items-center gap-1">
-                                    <i class="uil uil-camera"></i><span>${gallery_count}</span>
-                                  </span>
-                                </div>
-                              </div>
+          <!-- bottom-left: views + photos -->
+          <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-start">
+            <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-3 py-1 flex items-center gap-3">
+              <span class="flex items-center gap-1">
+                <i class="uil uil-eye"></i><span>: ${views}</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <i class="uil uil-camera"></i><span>: ${gallery_count}</span>
+              </span>
+            </div>
+          </div>
 
-                              <!-- bottom-right: P-ID -->
-                              <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-end">
-                                <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-2 py-1 flex items-center gap-1">
-                                  <i class="uil uil-building"></i>
-                                  <span>-ID: ${id}</span>
-                                </div>
-                              </div>
-                            </div>
+          <!-- bottom-right: P-ID -->
+          <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-end">
+            <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-3 py-1 flex items-center gap-1">
+              <i class="uil uil-postcard"></i>
+              <span>: ${id}</span>
+            </div>
+          </div>
+        </div>
 
-                            <!-- DETAILS & BUTTONS -->
-                            <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
-                              <div>
-                                <a href="/properties/${slug}"
-                                   class="block text-lg font-medium mb-2 hover:text-green-600 transition line-clamp-2">
-                                  ${title}
-                                </a>
+        <!-- DETAILS & BUTTONS -->
+        <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
+          <div>
+            <a href="/properties/${slug}"
+               class="block text-lg font-medium mb-2 hover:text-green-600 transition line-clamp-2">
+              ${title}
+            </a>
 
-                                <div class="text-xl font-bold text-green-600 mb-1">
-                                  PKR: ${fmtPrice}${purpose === 'rent' ? ' / M' : ''}
-                                </div>
+            <div class="text-xl font-bold text-green-600 mb-1">
+              PKR: ${fmtPrice}${purpose === 'rent' ? ' / M' : ''}
+            </div>
 
-                                <ul class="flex items-center space-x-6 text-slate-600 dark:text-slate-300 text-sm mb-4">
-                                  <li class="flex items-center gap-1">
-                                    <i class="uil uil-compress-arrows text-green-600 text-xl"></i>
-                                    <span>${plot_size}</span>
-                                  </li>
-                                  <li class="flex items-center gap-1">
-                                    <i class="uil uil-bed-double text-green-600 text-xl"></i>
-                                    <span>${beds}</span>
-                                  </li>
-                                  <li class="flex items-center gap-1">
-                                    <i class="uil uil-bath text-green-600 text-xl"></i>
-                                    <span>${baths}</span>
-                                  </li>
-                                </ul>
-                              </div>
+            <ul class="flex items-center space-x-6 text-slate-600 dark:text-slate-300 text-sm mb-4">
+              <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
+                <i class="uil uil-compress-arrows text-green-600 text-xl"></i>
+                <span class="font-medium">${plot_size}</span>
+              </li>
+              <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
+                <i class="uil uil-bed-double text-green-600 text-xl"></i>
+                <span>${beds}</span>
+              </li>
+              <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
+                <i class="uil uil-bath text-green-600 text-xl"></i>
+                <span>${baths}</span>
+              </li>
+            </ul>
+          </div>
 
-                              <div class="mt-6 flex items-center gap-2">
-                                <a href="${phone ? `tel:${phone}` : '#'}"
-                                   class="btn btn-icon border border-blue-500 text-blue-500 rounded-full p-2">
-                                  <i class="uil uil-phone text-lg"></i>
-                                </a>
-                                <a href="${whatsapp_number ? `https://wa.me/${whatsapp_number}` : '#'}" target="_blank"
-                                   class="btn btn-icon bg-green-600 text-white rounded-full p-2">
-                                  <i class="uil uil-whatsapp text-lg"></i>
-                                </a>
-                                <a href="/properties/${slug}"
-                                   class="btn flex-1 text-sm text-center border border-blue-500 text-blue-500 rounded-full py-2 px-4">
-                                  More
-                                </a>
-                              </div>
-                            </div>
-                          </div>`;
+          <div class="mt-6 flex items-center gap-3">
+            <a href="${phone ? `tel:${phone}` : '#'}"
+               class="btn btn-icon bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-400 text-blue-600 rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
+              <i class="uil uil-phone text-lg"></i>
+            </a>
+            <a href="${whatsapp_number ? `https://wa.me/${whatsapp_number}` : '#'}" target="_blank" rel="noopener"
+               class="btn btn-icon bg-green-50 hover:bg-gree-100 border border-green-200 hover:border-green-400 text-green-600 rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
+              <i class="uil uil-whatsapp text-lg"></i>
+            </a>
+            <a href="/properties/${slug}"
+               class="btn flex-1 text-sm text-center bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-400 text-slate-700 rounded-xl py-3 px-4 font-medium transition-all duration-300 shadow-sm hover:shadow-md">
+              More
+            </a>
+          </div>
+        </div>
+      </div>`;
             };
         </script>
     @endpush
@@ -137,53 +146,36 @@
 
 @push('scripts')
     <script>
-
         function propertyTabs() {
-            return {tab: 'buy'}
+            return { tab: 'buy' }
         }
 
         function propertySearch(type) {
             return {
-                search: {keyword: '', category: '', min_price: '', max_price: '', type},
-                options: {categories: [], min_prices: [], max_prices: []},
+                search: { keyword: '', category: '', min_price: '', max_price: '', type },
+                options: { categories: [], min_prices: [], max_prices: [] },
                 loading: false,
                 results: [],
                 searched: false,
                 loadOptions() {
-                    axios.get('/api/properties/options')
-                        .then(res => {
-                            this.options = res.data;
-                            this.$nextTick(() => {
-                                if (window.Choices) {
-                                    if (this.$refs.category) new Choices(this.$refs.category, {
-                                        searchEnabled: false,
-                                        itemSelectText: ''
-                                    });
-                                    if (this.$refs.minPrice) new Choices(this.$refs.minPrice, {
-                                        searchEnabled: false,
-                                        itemSelectText: ''
-                                    });
-                                    if (this.$refs.maxPrice) new Choices(this.$refs.maxPrice, {
-                                        searchEnabled: false,
-                                        itemSelectText: ''
-                                    });
-                                }
-                            });
+                    axios.get('/api/properties/options').then(res => {
+                        this.options = res.data;
+                        this.$nextTick(() => {
+                            if (window.Choices) {
+                                if (this.$refs.category) new Choices(this.$refs.category, { searchEnabled: false, itemSelectText: '' });
+                                if (this.$refs.minPrice) new Choices(this.$refs.minPrice, { searchEnabled: false, itemSelectText: '' });
+                                if (this.$refs.maxPrice) new Choices(this.$refs.maxPrice, { searchEnabled: false, itemSelectText: '' });
+                            }
                         });
+                    });
                 },
                 searchProperties() {
                     this.loading = true;
                     this.searched = true;
-                    axios.get('/api/properties/search', {params: this.search})
-                        .then(res => {
-                            this.results = res.data.data || [];
-                        })
-                        .catch(() => {
-                            this.results = [];
-                        })
-                        .finally(() => {
-                            this.loading = false;
-                        });
+                    axios.get('/api/properties/search', { params: this.search })
+                        .then(res => { this.results = res.data.data || []; })
+                        .catch(() => { this.results = []; })
+                        .finally(() => { this.loading = false; });
                 }
             }
         }
@@ -195,15 +187,9 @@
                 fetch() {
                     this.loading = true;
                     axios.get('/api/properties/featured')
-                        .then(res => {
-                            this.properties = res.data.data || [];
-                        })
-                        .catch(() => {
-                            this.properties = [];
-                        })
-                        .finally(() => {
-                            this.loading = false;
-                        });
+                        .then(res => { this.properties = res.data.data || []; })
+                        .catch(() => { this.properties = []; })
+                        .finally(() => { this.loading = false; });
                 }
             }
         }
