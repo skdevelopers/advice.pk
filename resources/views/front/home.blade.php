@@ -46,7 +46,7 @@
                         : '';
 
                 return `
-      <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-500 flex flex-col h-full">
+      <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 transition-all duration-500 ease-in-out flex flex-col h-full dark:hover:border-green-500 hover:ring-2 hover:ring-green-500/20 dark:hover:ring-green-400/30 hover:bg-gray-50/50 dark:hover:bg-slate-800/50 hover:-translate-y-1">
 
         <!-- IMAGE + OVERLAYS -->
         <div class="relative isolate w-full aspect-square overflow-hidden">
@@ -55,7 +55,7 @@
             alt="${title}"
             loading="lazy"
             onerror="this.onerror=null;this.src='${PH}'"
-            class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 z-0"
+            class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105 z-0"
           />
 
           ${badge ? `
@@ -91,7 +91,7 @@
         <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
           <div>
             <a href="/properties/${slug}"
-               class="block text-lg font-medium mb-2 hover:text-green-600 transition line-clamp-2">
+               class="block text-lg font-medium mb-2 text-slate-900 dark:text-white hover:text-green-600 transition-colors duration-300 line-clamp-2">
               ${title}
             </a>
 
@@ -117,15 +117,15 @@
 
           <div class="mt-6 flex items-center gap-3">
             <a href="${phone ? `tel:${phone}` : '#'}"
-               class="btn btn-icon bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-400 text-blue-600 rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
+               class="btn btn-primary bg-blue-50 hover:bg-blue-100 dark:bg-blue-800 dark:hover:bg-blue-700 border border-blue-200 hover:border-blue-400 dark:border-blue-600 dark:hover:border-blue-500 text-blue-700 dark:text-white rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
               <i class="uil uil-phone text-lg"></i>
             </a>
             <a href="${whatsapp_number ? `https://wa.me/${whatsapp_number}` : '#'}" target="_blank" rel="noopener"
-               class="btn btn-icon bg-green-50 hover:bg-gree-100 border border-green-200 hover:border-green-400 text-green-600 rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
-              <i class="uil uil-whatsapp text-lg"></i>
+               class="btn btn-primary hover:bg-green-200 dark:bg-green-800 dark:hover:bg-green-700 border border-green-600 hover:border-green-400 dark:border-green-600 dark:hover:border-green-500 text-green-700 dark:text-white rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
+              <i class="uil uil-whatsapp text-green-600 text-lg"></i>
             </a>
             <a href="/properties/${slug}"
-               class="btn flex-1 text-sm text-center bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-400 text-slate-700 rounded-xl py-3 px-4 font-medium transition-all duration-300 shadow-sm hover:shadow-md">
+               class="btn btn-primary text-sm text-center bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 hover:border-slate-400 dark:border-slate-600 dark:hover:border-slate-500 text-slate-700 dark:text-white rounded-xl py-3 px-4 font-medium transition-all duration-300 shadow-sm hover:shadow-md">
               More
             </a>
           </div>
