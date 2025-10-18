@@ -4,68 +4,42 @@
 
 @once
     @push('head')
-        {{-- CHANGE #1: Preload only when there is a real first image; do NOT preload the placeholder --}}
         @if(!empty($featuredProperties[0]['property_image_url']))
-            <link rel="preload"
-                  as="image"
-                  fetchpriority="high"
-                  href="{{ $featuredProperties[0]['property_image_url'] }}">
+            <link rel="preload" as="image" fetchpriority="high" href="{{ $featuredProperties[0]['property_image_url'] }}">
         @endif
-
         <script>
-            // Keep existing placeholder (Blade-only, no PHP short tags)
-            window.PLACEHOLDER_IMG = window.PLACEHOLDER_IMG
-                || '{{ asset('assets/front/images/placeholder.jpg') }}';
-
-            // Card renderer (unchanged layout; overlay positions preserved)
+            window.PLACEHOLDER_IMG = window.PLACEHOLDER_IMG || @json(asset('assets/front/images/placeholder.jpg'));
             window.renderPropertyCard = function (property) {
                 const {
-                    title = 'Advice Associates',
+                    title = 'Advice Associates AI CRM',
                     property_image_url,
                     slug = '#',
-                    price = 0,
-                    views = 0,
-                    gallery_count = 0,
-                    id = 0,
-                    beds = 0,
-                    baths = 0,
-                    plot_size = '',
-                    today_deal = false,
-                    purpose = '',
-                    phone = '',
-                    whatsapp_number = ''
+                    price = 0, views = 0, gallery_count = 0, id = 0,
+                    beds = 0, baths = 0, plot_size = '',
+                    today_deal = false, purpose = '',
+                    phone = '', whatsapp_number = ''
                 } = property;
 
                 const PH = window.PLACEHOLDER_IMG;
                 const imgSrc = property_image_url || PH;
                 const fmtPrice = new Intl.NumberFormat().format(price);
-
-                // Badge text
-                const badge = (today_deal || purpose === 'sale') ? 'SALE'
-                    : (purpose === 'rent') ? 'RENT'
-                        : '';
+                const badge = (today_deal || purpose === 'sale') ? 'SALE' : (purpose === 'rent') ? 'RENT' : '';
 
                 return `
                         <div class="group relative rounded-2xl bg-white dark:bg-slate-900 shadow-sm transition-all duration-300
                                     hover:shadow-xl hover:-translate-y-1 hover:ring-2 hover:ring-green-500/20
+                                    ring-offset-1 ring-offset-white dark:ring-offset-slate-900
                                     dark:shadow-gray-700 dark:hover:shadow-gray-700 dark:hover:ring-green-400/30 flex flex-col h-full">
 
-                          <!-- IMAGE AREA (handles clipping/rounding) -->
                           <div class="overflow-hidden rounded-2xl rounded-b-none">
-                            <div class="relative isolate w-full aspect-square">
-                              <img
-                                src="${imgSrc}"
-                                alt="${title}"
-                                loading="lazy"
-                                onerror="this.onerror=null;this.src='${PH}'"
-                                class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105 z-0"
-                              />
+                            <div class="relative isolate w-full aspect-square bg-slate-100 dark:bg-slate-800">
+                              <img src="${imgSrc}" alt="${title}" loading="lazy"
+                                   onerror="this.onerror=null;this.src='${PH}'"
+                                   class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105 z-0" />
 
                               ${badge ? `
                               <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-start justify-end">
-                                <span class="pointer-events-auto bg-green-600 text-white text-xs font-semibold uppercase px-3 py-2 rounded-sm">
-                                  ${badge}
-                                </span>
+                                <span class="pointer-events-auto bg-green-600 text-white text-xs font-semibold uppercase px-3 py-2 rounded-sm">${badge}</span>
                               </div>` : ''}
 
                               <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-start">
@@ -83,7 +57,6 @@
                             </div>
                           </div>
 
-                          <!-- CONTENT -->
                           <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
                             <div>
                               <a href="/properties/${slug}"
