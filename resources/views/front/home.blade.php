@@ -1,6 +1,6 @@
 @extends('front.layouts.app')
 
-@section('title', 'Advice Associates | Real Estate Landing')
+@section('title', 'Advice Associates | Real Estate AI Landing')
 
 @once
     @push('head')
@@ -46,91 +46,96 @@
                         : '';
 
                 return `
-      <div class="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl dark:hover:shadow-xl dark:shadow-gray-700 dark:hover:shadow-gray-700 transition-all duration-500 ease-in-out flex flex-col h-full dark:hover:border-green-500 hover:ring-2 hover:ring-green-500/20 dark:hover:ring-green-400/30 hover:bg-gray-50/50 dark:hover:bg-slate-800/50 hover:-translate-y-1">
+                        <div class="group relative rounded-2xl bg-white dark:bg-slate-900 shadow-sm transition-all duration-300
+                                    hover:shadow-xl hover:-translate-y-1 hover:ring-2 hover:ring-green-500/20
+                                    dark:shadow-gray-700 dark:hover:shadow-gray-700 dark:hover:ring-green-400/30 flex flex-col h-full">
 
-        <!-- IMAGE + OVERLAYS -->
-        <div class="relative isolate w-full aspect-square overflow-hidden">
-          <img
-            src="${imgSrc}"
-            alt="${title}"
-            loading="lazy"
-            onerror="this.onerror=null;this.src='${PH}'"
-            class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105 z-0"
-          />
+                          <!-- IMAGE AREA (handles clipping/rounding) -->
+                          <div class="overflow-hidden rounded-2xl rounded-b-none">
+                            <div class="relative isolate w-full aspect-square">
+                              <img
+                                src="${imgSrc}"
+                                alt="${title}"
+                                loading="lazy"
+                                onerror="this.onerror=null;this.src='${PH}'"
+                                class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105 z-0"
+                              />
 
-          ${badge ? `
-          <!-- top-right badge -->
-          <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-start justify-end">
-            <span class="pointer-events-auto bg-green-600 text-white text-xs font-semibold uppercase px-3 py-2 rounded-sm">
-              ${badge}
-            </span>
-          </div>` : ''}
+                              ${badge ? `
+                              <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-start justify-end">
+                                <span class="pointer-events-auto bg-green-600 text-white text-xs font-semibold uppercase px-3 py-2 rounded-sm">
+                                  ${badge}
+                                </span>
+                              </div>` : ''}
 
-          <!-- bottom-left: views + photos -->
-          <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-start">
-            <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-3 py-1 flex items-center gap-3">
-              <span class="flex items-center gap-1">
-                <i class="uil uil-eye"></i><span>: ${views}</span>
-              </span>
-              <span class="flex items-center gap-1">
-                <i class="uil uil-camera"></i><span>: ${gallery_count}</span>
-              </span>
-            </div>
-          </div>
+                              <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-start">
+                                <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-3 py-1 flex items-center gap-3">
+                                  <span class="flex items-center gap-1"><i class="uil uil-eye"></i><span>: ${views}</span></span>
+                                  <span class="flex items-center gap-1"><i class="uil uil-camera"></i><span>: ${gallery_count}</span></span>
+                                </div>
+                              </div>
 
-          <!-- bottom-right: P-ID -->
-          <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-end">
-            <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-3 py-1 flex items-center gap-1">
-              <i class="uil uil-postcard"></i>
-              <span>: ${id}</span>
-            </div>
-          </div>
-        </div>
+                              <div class="absolute inset-0 z-20 p-2 pointer-events-none flex items-end justify-end">
+                                <div class="pointer-events-auto bg-black/60 text-white text-xs rounded-full px-3 py-1 flex items-center gap-1">
+                                  <i class="uil uil-postcard"></i><span>: ${id}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
-        <!-- DETAILS & BUTTONS -->
-        <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
-          <div>
-            <a href="/properties/${slug}"
-               class="block text-lg font-medium mb-2 text-slate-900 dark:text-white hover:text-green-600 transition-colors duration-300 line-clamp-2">
-              ${title}
-            </a>
+                          <!-- CONTENT -->
+                          <div class="p-6 flex flex-col flex-1 justify-between text-slate-900 dark:text-slate-100">
+                            <div>
+                              <a href="/properties/${slug}"
+                                 class="block text-lg font-medium mb-2 text-slate-900 dark:text-white hover:text-green-600 transition-colors duration-300 line-clamp-2">
+                                ${title}
+                              </a>
 
-            <div class="text-xl font-bold text-green-600 mb-1">
-              PKR: ${fmtPrice}${purpose === 'rent' ? ' / M' : ''}
-            </div>
+                              <div class="text-xl font-bold text-green-600 mb-1">
+                                PKR: ${fmtPrice}${purpose === 'rent' ? ' / M' : ''}
+                              </div>
 
-            <ul class="flex items-center space-x-6 text-slate-600 dark:text-slate-300 text-sm mb-4">
-              <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
-                <i class="uil uil-compress-arrows text-green-600 text-xl"></i>
-                <span class="font-medium">${plot_size}</span>
-              </li>
-              <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
-                <i class="uil uil-bed-double text-green-600 text-xl"></i>
-                <span>${beds}</span>
-              </li>
-              <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
-                <i class="uil uil-bath text-green-600 text-xl"></i>
-                <span>${baths}</span>
-              </li>
-            </ul>
-          </div>
+                              <ul class="flex items-center gap-3 text-slate-600 dark:text-slate-300 text-sm mb-4">
+                                <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
+                                  <i class="uil uil-compress-arrows text-green-600 text-xl"></i><span class="font-medium">${plot_size}</span>
+                                </li>
+                                <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
+                                  <i class="uil uil-bed-double text-green-600 text-xl"></i><span>${beds}</span>
+                                </li>
+                                <li class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg">
+                                  <i class="uil uil-bath text-green-600 text-xl"></i><span>${baths}</span>
+                                </li>
+                              </ul>
+                            </div>
 
-          <div class="mt-6 flex items-center gap-3">
-            <a href="${phone ? `tel:${phone}` : '#'}"
-               class="btn btn-primary bg-blue-50 hover:bg-blue-100 dark:bg-blue-800 dark:hover:bg-blue-700 border border-blue-200 hover:border-blue-400 dark:border-blue-600 dark:hover:border-blue-500 text-blue-700 dark:text-white rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
-              <i class="uil uil-phone text-lg"></i>
-            </a>
-            <a href="${whatsapp_number ? `https://wa.me/${whatsapp_number}` : '#'}" target="_blank" rel="noopener"
-               class="btn btn-primary hover:bg-green-200 dark:bg-green-800 dark:hover:bg-green-700 border border-green-600 hover:border-green-400 dark:border-green-600 dark:hover:border-green-500 text-green-700 dark:text-white rounded-xl p-3 transition-all duration-300 shadow-sm hover:shadow-md">
-              <i class="uil uil-whatsapp text-green-600 text-lg"></i>
-            </a>
-            <a href="/properties/${slug}"
-               class="btn btn-primary text-sm text-center bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 hover:border-slate-400 dark:border-slate-600 dark:hover:border-slate-500 text-slate-700 dark:text-white rounded-xl py-3 px-4 font-medium transition-all duration-300 shadow-sm hover:shadow-md">
-              More
-            </a>
-          </div>
-        </div>
-      </div>`;
+                            <div class="mt-6 flex items-center gap-3">
+                              <a href="${phone ? `tel:${phone}` : '#'}"
+                                 class="inline-flex items-center justify-center rounded-xl p-3 border border-blue-200 text-blue-700
+                                        bg-blue-50 hover:bg-blue-100 hover:border-blue-400
+                                        dark:bg-blue-800 dark:hover:bg-blue-700 dark:border-blue-600 dark:hover:border-blue-500 dark:text-white
+                                        transition-all duration-300 shadow-sm hover:shadow-md">
+                                <i class="uil uil-phone text-lg"></i>
+                              </a>
+
+                              <a href="${whatsapp_number ? `https://wa.me/${whatsapp_number}` : '#'}" target="_blank" rel="noopener"
+                                 class="inline-flex items-center justify-center rounded-xl p-3 border border-green-600 text-green-700
+                                        hover:bg-green-200
+                                        dark:bg-green-800 dark:hover:bg-green-700 dark:border-green-600 dark:hover:border-green-500 dark:text-white
+                                        transition-all duration-300 shadow-sm hover:shadow-md">
+                                <i class="uil uil-whatsapp text-lg"></i>
+                              </a>
+
+                              <a href="/properties/${slug}"
+                                 class="inline-flex items-center justify-center rounded-xl py-3 px-4 text-sm font-medium
+                                        border border-slate-200 text-slate-700 bg-slate-50
+                                        hover:bg-slate-100 hover:border-slate-400
+                                        dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-600 dark:hover:border-slate-500 dark:text-white
+                                        transition-all duration-300 shadow-sm hover:shadow-md">
+                                More
+                              </a>
+                            </div>
+                          </div>
+                        </div>`;
             };
         </script>
     @endpush

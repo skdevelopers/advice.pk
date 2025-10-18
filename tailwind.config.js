@@ -1,28 +1,31 @@
 const colors = require('tailwindcss/colors');
 
 module.exports = {
-  content: [
-    './resources/**/*.blade.php',
-    './resources/**/*.js',
-    './resources/**/*.vue',
-    './storage/framework/views/*.php',
-    './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
-  ],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Instrument Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-      },
-      colors: {
-        ...colors,
-        primary: colors.indigo,
-        secondary: colors.gray,
-      },
-    },
-  },
-  corePlugins: {
-    // aspectRatio is true by default in v4—only override if you’ve turned it off
-    aspectRatio: true,
-  },
-  plugins: [],
-};
+    darkMode: 'class', content: [
+        './resources/**/*.blade.php',
+        './resources/**/*.js',
+        './resources/**/*.vue',
+        './storage/framework/views/*.php',
+        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+    ], theme: {
+        extend: {
+            fontFamily: {
+                sans: ['Instrument Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+                ...colors,
+                primary: colors.indigo,
+                secondary: colors.gray,
+            },
+        },
+    }, corePlugins: {
+        // aspectRatio is true by default in v4—only override if you’ve turned it off
+        aspectRatio: true,
+    }, safelist: [
+        { pattern: /(bg|text|border|ring)-(slate|gray|green|blue)-(50|100|200|300|400|500|600|700|800|900)/, variants: ['hover','dark','dark:hover','group-hover'] },
+        { pattern: /(shadow|shadow-(sm|md|lg|xl))/ },
+        { pattern: /(aspect-square|line-clamp-\d)/ },
+    ], plugins: [
+        require('@tailwindcss/line-clamp'),
+        require('@tailwindcss/forms'),
+    ],};
