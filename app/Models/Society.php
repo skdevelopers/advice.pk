@@ -25,6 +25,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $city_id
  * @property string $name
  * @property string $slug
+ * @property string|null $meta_data
+ * @property string|null $map_data
  * @property string|null $overview
  * @property string|null $detail
  * @property bool $has_residential_plots
@@ -33,28 +35,48 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property bool $has_apartments
  * @property bool $has_farm_houses
  * @property bool $has_shop
- * @property array|null $property_types
+ * @property array<array-key, mixed>|null $property_types
  * @property int $created_by
  * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
- *
- * @property-read City $city
- * @property-read User $user
- * @property-read User|null $creator
- * @property-read Collection<int, SubSector> $subSectors
- * @property-read int|null $sub_sectors_count
+ * @property-read \App\Models\City $city
+ * @property-read \App\Models\User|null $creator
  * @property-read MediaCollection<int, Media> $media
- *
- * @method static SocietyFactory factory($count = null, $state = [])
- * @method static Builder|Society newModelQuery()
- * @method static Builder|Society newQuery()
- * @method static Builder|Society query()
- * @method static Builder|Society whereStatus($value)
- * @method static Builder|Society onlyTrashed()
- * @method static Builder|Society withTrashed()
- * @method static Builder|Society withoutTrashed()
+ * @property-read int|null $media_count
+ * @property-read Collection<int, \App\Models\SubSector> $subSectors
+ * @property-read int|null $sub_sectors_count
+ * @property-read \App\Models\SubSociety|null $subSociety
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\SocietyFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Society newModelQuery()
+ * @method static Builder<static>|Society newQuery()
+ * @method static Builder<static>|Society onlyTrashed()
+ * @method static Builder<static>|Society query()
+ * @method static Builder<static>|Society whereCityId($value)
+ * @method static Builder<static>|Society whereCreatedAt($value)
+ * @method static Builder<static>|Society whereCreatedBy($value)
+ * @method static Builder<static>|Society whereDeletedAt($value)
+ * @method static Builder<static>|Society whereDetail($value)
+ * @method static Builder<static>|Society whereHasApartments($value)
+ * @method static Builder<static>|Society whereHasCommercialPlots($value)
+ * @method static Builder<static>|Society whereHasFarmHouses($value)
+ * @method static Builder<static>|Society whereHasHouses($value)
+ * @method static Builder<static>|Society whereHasResidentialPlots($value)
+ * @method static Builder<static>|Society whereHasShop($value)
+ * @method static Builder<static>|Society whereId($value)
+ * @method static Builder<static>|Society whereMapData($value)
+ * @method static Builder<static>|Society whereMetaData($value)
+ * @method static Builder<static>|Society whereName($value)
+ * @method static Builder<static>|Society whereOverview($value)
+ * @method static Builder<static>|Society wherePropertyTypes($value)
+ * @method static Builder<static>|Society whereSlug($value)
+ * @method static Builder<static>|Society whereStatus($value)
+ * @method static Builder<static>|Society whereUpdatedAt($value)
+ * @method static Builder<static>|Society whereUserId($value)
+ * @method static Builder<static>|Society withTrashed()
+ * @method static Builder<static>|Society withoutTrashed()
  * @mixin Eloquent
  */
 class Society extends Model implements HasMedia

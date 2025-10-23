@@ -18,6 +18,12 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'eventbrite' => [
+        'client_id'     => env('EVENTBRITE_CLIENT_ID'),
+        'client_secret' => env('EVENTBRITE_CLIENT_SECRET'),
+        'redirect'      => env('EVENTBRITE_REDIRECT_URI', 'https://realestateai.pk/auth/eventbrite/callback'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

@@ -24,6 +24,13 @@ Route::post('/ai/generate/seo', function (\Illuminate\Http\Request $request) {
     return app(AiService::class)->generate($request->title, $request->city);
 })->name('ai.generate.seo');
 
+// Public Event Brite OAuth routes (no auth middleware)
+Route::get('/auth/eventbrite/redirect', [EventbriteAuthController::class, 'redirect'])
+    ->name('oauth.eventbrite.redirect');
+
+Route::get('/auth/eventbrite/callback', [EventbriteAuthController::class, 'callback'])
+    ->name('oauth.eventbrite.callback');
+
 // Admin Routes - No Auth Middleware for now
 Route::prefix('admin')->group(function () {
 

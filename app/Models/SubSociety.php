@@ -30,14 +30,29 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
- *
- * @property-read Society $society
- * @property-read Collection<int,SubSector> $subSectors
- *
- * @method static SubSocietyFactory factory($count = null, $state = [])
- * @method static Builder|SubSociety newModelQuery()
- * @method static Builder|SubSociety newQuery()
- * @method static Builder|SubSociety query()
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read \App\Models\Society $society
+ * @property-read Collection<int, \App\Models\SubSector> $subSectors
+ * @property-read int|null $sub_sectors_count
+ * @method static \Database\Factories\SubSocietyFactory factory($count = null, $state = [])
+ * @method static Builder<static>|SubSociety newModelQuery()
+ * @method static Builder<static>|SubSociety newQuery()
+ * @method static Builder<static>|SubSociety onlyTrashed()
+ * @method static Builder<static>|SubSociety query()
+ * @method static Builder<static>|SubSociety whereCreatedAt($value)
+ * @method static Builder<static>|SubSociety whereDeletedAt($value)
+ * @method static Builder<static>|SubSociety whereDetail($value)
+ * @method static Builder<static>|SubSociety whereId($value)
+ * @method static Builder<static>|SubSociety whereMetaDetail($value)
+ * @method static Builder<static>|SubSociety whereMetaKeywords($value)
+ * @method static Builder<static>|SubSociety whereName($value)
+ * @method static Builder<static>|SubSociety whereSlug($value)
+ * @method static Builder<static>|SubSociety whereSocietyId($value)
+ * @method static Builder<static>|SubSociety whereType($value)
+ * @method static Builder<static>|SubSociety whereUpdatedAt($value)
+ * @method static Builder<static>|SubSociety withTrashed()
+ * @method static Builder<static>|SubSociety withoutTrashed()
  * @mixin Eloquent
  */
 class SubSociety extends Model implements HasMedia
