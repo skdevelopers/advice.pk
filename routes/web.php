@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\SocietyPageController;
 use App\Http\Controllers\Admin\SubSectorController;
 use App\Http\Controllers\Admin\SubSocietyController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EventbriteAuthController;
 use App\Http\Controllers\FrontPropertyController;
 use App\Services\AiService;
 use Illuminate\Support\Facades\Route;
