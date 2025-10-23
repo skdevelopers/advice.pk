@@ -1,6 +1,6 @@
 @extends('front.layouts.app')
 
-@section('title', 'Advice Associates | Real Estate AI Landing')
+@section('title', 'Advice Associates | Real Estate AI CRM')
 
 @once
     @push('head')

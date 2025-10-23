@@ -23,3 +23,7 @@ yarn-error.log
 /.zed
 storage/*.sql
 *.sql
+_ide_helper.php
+_ide_helper_models.php
+_ide_helper_model_helpers.php
+.phpstorm.meta.php

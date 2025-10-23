@@ -20,7 +20,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * @property int $id
  * @property int $society_id
- * @property int|null $sub_society_id
+ * @property int|null $parent_id
  * @property string|null $name
  * @property string|null $title
  * @property string|null $slug
@@ -30,16 +30,31 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $block
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property Carbon|null $deleted_at
- *
- * @property-read Society $society
- * @property-read SubSociety|null $subSociety
- * @property-read MediaCollection<int,Media> $media
- *
- * @method static SubSectorFactory factory($count = null, $state = [])
- * @method static Builder|SubSector newModelQuery()
- * @method static Builder|SubSector newQuery()
- * @method static Builder|SubSector query()
+ * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, SubSector> $children
+ * @property-read int|null $children_count
+ * @property-read MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read SubSector|null $parent
+ * @property-read \App\Models\Society $society
+ * @property-read \App\Models\SubSociety|null $subSociety
+ * @method static \Database\Factories\SubSectorFactory factory($count = null, $state = [])
+ * @method static Builder<static>|SubSector newModelQuery()
+ * @method static Builder<static>|SubSector newQuery()
+ * @method static Builder<static>|SubSector query()
+ * @method static Builder<static>|SubSector whereBlock($value)
+ * @method static Builder<static>|SubSector whereCreatedAt($value)
+ * @method static Builder<static>|SubSector whereDeletedAt($value)
+ * @method static Builder<static>|SubSector whereDetail($value)
+ * @method static Builder<static>|SubSector whereId($value)
+ * @method static Builder<static>|SubSector whereMetaDetail($value)
+ * @method static Builder<static>|SubSector whereMetaKeywords($value)
+ * @method static Builder<static>|SubSector whereName($value)
+ * @method static Builder<static>|SubSector whereParentId($value)
+ * @method static Builder<static>|SubSector whereSlug($value)
+ * @method static Builder<static>|SubSector whereSocietyId($value)
+ * @method static Builder<static>|SubSector whereTitle($value)
+ * @method static Builder<static>|SubSector whereUpdatedAt($value)
  * @mixin Eloquent
  */
 class SubSector extends Model implements HasMedia

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\SocietyPageController;
 use App\Http\Controllers\Admin\SubSectorController;
 use App\Http\Controllers\Admin\SubSocietyController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EventbriteAuthController;
 use App\Http\Controllers\FrontPropertyController;
 use App\Services\AiService;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,13 @@ Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::post('/ai/generate/seo', function (\Illuminate\Http\Request $request) {
     return app(AiService::class)->generate($request->title, $request->city);
 })->name('ai.generate.seo');
+
+// Public Event Brite OAuth routes (no auth middleware)
+Route::get('/auth/eventbrite/redirect', [EventbriteAuthController::class, 'redirect'])
+    ->name('oauth.eventbrite.redirect');
+
+Route::get('/auth/eventbrite/callback', [EventbriteAuthController::class, 'callback'])
+    ->name('oauth.eventbrite.callback');
 
 // Admin Routes - No Auth Middleware for now
 Route::prefix('admin')->group(function () {
