@@ -74,6 +74,6 @@ class EventbriteAuthController extends Controller
 
         Auth::login($user, true);
 
-        return redirect()->route('dashboard')->with('ok', 'Signed in with Eventbrite');
+        return redirect()->route('admin.dashboard')->with('ok', 'Signed in with Eventbrite');
     }
 }
