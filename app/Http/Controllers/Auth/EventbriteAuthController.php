@@ -1,24 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * EventbriteAuthController
- *
- * Handles attendee OAuth login via Eventbrite:
- *  - GET /auth/eventbrite/redirect
- *  - GET /auth/eventbrite/callback
- *
- * Behavior:
- *  - Creates/links a local user (by provider id, fallback by email)
- *  - Stores tokens in user_identities
- *  - Logs the user in
- *  - Appends a CSV row to storage/app/eventbrite/oauth_users.csv (append-only)
- *  - Redirects to ?next=... or to route('admin.dashboard') by default
- *
- * Note: This controller is for attendee login UX only.
- *       For org-level data sync (orders/attendees/events), use the organizer token server-side.
- */
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -27,40 +9,32 @@ use App\Models\UserIdentity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
-
 class EventbriteAuthController extends Controller
 {
-    /**
-     * Redirect the browser to Eventbrite for OAuth consent.
-     */
+    /** Start OAuth */
     public function redirect(): RedirectResponse
     {
-        // Remember the post-login destination (optional)
         if (request()->filled('next')) {
             session(['next_url' => (string) request()->query('next')]);
         }
-
         return Socialite::driver('eventbrite')->redirect();
-        // If you ever face session/proxy issues during callback, you can switch to:
+        // If you ever face state/proxy issues:
         // return Socialite::driver('eventbrite')->stateless()->redirect();
     }
 
-    /**
-     * OAuth callback: create/link user, store tokens, login, CSV log, redirect.
-     */
+    /** Callback: upsert user, store tokens, login, CSV append (non-fatal), redirect */
     public function callback(): RedirectResponse
     {
         try {
-            $ebUser = Socialite::driver('eventbrite')->user(); // calls /users/me
-            // For stateless mode (if needed):
-            // $ebUser = Socialite::driver('eventbrite')->stateless()->user();
+            $ebUser = Socialite::driver('eventbrite')->user();
         } catch (\Throwable $e) {
             Log::warning('Eventbrite OAuth callback error', ['error' => $e->getMessage()]);
-            return redirect()->route('admin.dashboard')
+            return redirect()->to($this->fallbackUrl())
                 ->with('error', 'Eventbrite sign-in failed. Please try again.');
         }
 
@@ -68,24 +42,19 @@ class EventbriteAuthController extends Controller
         $name  = $ebUser->getName() ?: ($email ? Str::before($email, '@') : 'Guest');
         $pid   = (string) $ebUser->getId();
 
-        // 1) Resolve the local user (by provider id first, then email)
-        $identity = UserIdentity::query()
-            ->where(['provider' => 'eventbrite', 'provider_id' => $pid])
-            ->first();
+        // Resolve/link user
+        $identity = UserIdentity::where(['provider' => 'eventbrite', 'provider_id' => $pid])->first();
+        $user     = $identity?->user ?: ($email ? User::where('email', $email)->first() : null);
 
-        $user = $identity?->user
-            ?: ($email ? User::query()->where('email', $email)->first() : null);
-
-        // 2) Create a new user if none found
         if (!$user) {
-            $user = User::query()->create([
+            $user = User::create([
                 'name'     => $name,
                 'email'    => $email ?: "no-email+eb-{$pid}@example.invalid",
-                'password' => bcrypt(Str::random(40)), // user can set real password later
+                'password' => bcrypt(Str::random(40)),
             ]);
         }
 
-        // 3) Link or refresh the identity tokens (do not write tokens to CSV)
+        // Store/refresh tokens (not written to CSV)
         UserIdentity::updateOrCreate(
             ['provider' => 'eventbrite', 'provider_id' => $pid],
             [
@@ -96,58 +65,67 @@ class EventbriteAuthController extends Controller
             ]
         );
 
-        // 4) Sign in locally
-        Auth::login($user, remember: true);
+        // Login
+        Auth::login($user, true);
 
-        // 5) Append CSV log (append-only, never overwrite)
-        $this->csvAppend(
-            ['time', 'user_id', 'name', 'email', 'provider_id', 'token_present'],
-            [now()->toDateTimeString(), (string)$user->id, $name, (string)$email, $pid, $ebUser->token ? 'yes' : 'no']
-        );
+        // Append CSV (non-fatal on any error)
+        try {
+            $this->csvAppendTo(
+                'oauth_users.csv',
+                ['time','user_id','name','email','provider_id','token_present'],
+                [now()->toDateTimeString(), (string) $user->id, $name, (string) $email, $pid, $ebUser->token ? 'yes' : 'no']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('CSV append failed (oauth_users.csv)', ['error' => $e->getMessage()]);
+            // Don’t throw—login should still succeed
+        }
 
-        // 6) Redirect
-        $to = session()->pull('next_url') ?: route('admin.dashboard');
+        // Redirect (?next → admin.dashboard → dashboard → /)
+        $to = session()->pull('next_url');
+        if (!$to) {
+            $to = Route::has('admin.dashboard') ? route('admin.dashboard')
+                : (Route::has('dashboard') ? route('dashboard') : url('/'));
+        }
         return redirect()->to($to)->with('ok', 'Signed in with Eventbrite');
     }
 
-    /**
-     * Append a row to CSV under storage/app/eventbrite/
-     *
-     * @param  array  $headers   header columns (written once if file new)
-     * @param  array  $row       values (must align with headers)
-     */
-    private function csvAppend(array $headers, array $row): void
+    /** Append a row to CSV under storage/app/eventbrite/ (creates dir/file as needed) */
+    private function csvAppendTo(string $filename, array $headers, array $row): void
     {
-        $disk = Storage::disk('local');           // writes under storage/app
+        $disk = Storage::disk('local');   // storage/app
         $dir  = 'eventbrite';
-        $path = $dir . '/' . ltrim('oauth_users.csv', '/');
+        $path = $dir . '/' . ltrim($filename, '/');
 
-        // 1) Ensure directory exists (recursive)
+        // Ensure directory exists (recursive)
         if (!$disk->exists($dir)) {
-            // 0755, recursive = true, force = true
+            // recursive + force create; visibility handled by default local driver
             $disk->makeDirectory($dir, 0755, true, true);
         }
 
-        // 2) If file doesn't exist yet, write header line once
+        // If file is new, write headers
         if (!$disk->exists($path)) {
-            // Build CSV header row
-            $headFp = fopen('php://temp', 'r+');
-            fputcsv($headFp, $headers);
-            rewind($headFp);
-            $headerLine = stream_get_contents($headFp) ?: '';
-            fclose($headFp);
-
-            $disk->put($path, $headerLine);
+            $head = $this->csvLine($headers);
+            $disk->put($path, $head);
         }
 
-        // 3) Append the data row (as proper CSV)
-        $fp = fopen('php://temp', 'r+');
-        fputcsv($fp, $row);
-        rewind($fp);
-        $line = stream_get_contents($fp) ?: '';
-        fclose($fp);
+        // Append the data row
+        $disk->append($path, rtrim($this->csvLine($row), "\r\n"));
+    }
 
-        // Storage::append adds a newline; trim our temp line just in case
-        $disk->append($path, rtrim($line, "\r\n"));
+    /** Build a CSV line in memory */
+    private function csvLine(array $fields): string
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $fields);
+        rewind($fp);
+        $line = (string) stream_get_contents($fp);
+        fclose($fp);
+        return $line;
+    }
+
+    private function fallbackUrl(): string
+    {
+        return Route::has('admin.dashboard') ? route('admin.dashboard')
+            : (Route::has('dashboard') ? route('dashboard') : url('/'));
     }
 }
