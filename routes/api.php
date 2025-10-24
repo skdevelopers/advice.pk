@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\EventbriteAuthController;
 use App\Http\Controllers\FrontPropertyController;
 use App\Models\Property;
 use Illuminate\Http\Request;
@@ -8,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// POST endpoint for Eventbrite webhooks (no CSRF on api.php)
+Route::post('/webhooks/eventbrite', EventbriteWebhookController::class)
+    ->name('webhooks.eventbrite');
 
 // Group all “properties/…” routes under one prefix:
 Route::prefix('properties')->group(function () {
