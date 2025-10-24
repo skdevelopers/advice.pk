@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\CityController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\SocietyController;
@@ -17,9 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('front.home');
 });
-Route::get('/profile', function () {
-    return 'Profile page';
-})->name('profile');
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
     ->name('properties.show');
 Route::post('/auth/login', [AuthController::class, 'login']);

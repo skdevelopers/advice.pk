@@ -57,7 +57,7 @@ class UserIdentity extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'owner_user_id', 'uuid');
+        return $this->belongsTo(User::class, 'user_id');
 
     }
 
