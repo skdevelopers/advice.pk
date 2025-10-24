@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('front.home');
 });
+Route::get('/profile', function () {
+    return 'Profile page';
+})->name('profile');
 Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
     ->name('properties.show');
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -36,7 +39,7 @@ Route::get('/auth/eventbrite/callback', [EventbriteAuthController::class, 'callb
 Route::prefix('admin')->group(function () {
 
     Route::get('/dashboard', function () {
-        return view('admin.dashboard.index'); // resources/views/admin/index.blade.php
+        return view('admin.dashboard.index'); // resources/views/admin/dashboard/index.blade.php
     })->name('admin.dashboard');
 
     Route::resource('blogs', BlogController::class)->names([

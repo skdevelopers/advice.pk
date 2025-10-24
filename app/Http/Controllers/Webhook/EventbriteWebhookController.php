@@ -1,38 +1,32 @@
 <?php
 /**
  * Eventbrite Webhook receiver (POST).
- *
  * - Verifies optional shared secret (?t=...).
- * - Appends a webhook receipt row (delivery/action/api_url) to CSV.
- * - If api_url is present and looks valid, fetches the resource using the
- *   ORGANIZER server token and writes a normalized row to attendees.csv or orders.csv.
- *
- * CSV files (append-only):
- *   storage/app/eventbrite/webhooks.csv
- *   storage/app/eventbrite/attendees.csv
- *   storage/app/eventbrite/orders.csv
- *   storage/app/eventbrite/errors.csv    (only on failures)
+ * - Logs each delivery to webhooks.csv (append-only).
+ * - If api_url looks real, fetches with organizer server token and writes
+ *   normalized rows to attendees.csv / orders.csv.
+ * - Always responds 200 text/plain, never 500 due to CSV/IO.
  */
 
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Services\EventbriteClient;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 
 class EventbriteWebhookController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request)
     {
-        // 1) Optional shared-secret guard
+        // 1) Optional shared-secret guard (?t=YOUR_SECRET)
         $expected = (string) config('eventbrite.webhook_secret', '');
         if ($expected !== '' && $request->query('t') !== $expected) {
-            return response()->json(['ok' => false, 'error' => 'forbidden'], 403);
+            return response('forbidden', 403)->header('Content-Type', 'text/plain');
         }
 
         // 2) Extract basics
@@ -43,50 +37,42 @@ class EventbriteWebhookController extends Controller
 
         Log::info('Eventbrite webhook received', compact('deliveryId','action','apiUrl'));
 
-        // 3) Append webhook receipt
-        $this->csvAppend('webhooks.csv',
+        // 3) Append webhook receipt (non-fatal)
+        $this->csvSafeAppend('webhooks.csv',
             ['received_at','delivery_id','action','api_url'],
             [now()->toDateTimeString(), $deliveryId, $action, $apiUrl]
         );
 
-        // 4) If api_url is present, try to fetch and normalize
+        // 4) If api_url is real, fetch & normalize (non-fatal)
         if ($apiUrl && ! str_contains($apiUrl, '{api-endpoint-to-fetch-object-details}')) {
             try {
-                $client   = new EventbriteClient();
+                $client   = new EventbriteClient(); // uses organizer server token
                 $resource = $client->get($apiUrl);
 
-                // Detect type by URL or keys
                 $type = $this->detectType($apiUrl, $resource);
 
                 if ($type === 'attendee') {
                     $row = $this->mapAttendeeRow($resource);
-                    $this->csvAppend('attendees.csv',
-                        array_keys($row),
-                        array_values($row)
-                    );
+                    $this->csvSafeAppend('attendees.csv', array_keys($row), array_values($row));
                 } elseif ($type === 'order') {
                     $row = $this->mapOrderRow($resource);
-                    $this->csvAppend('orders.csv',
-                        array_keys($row),
-                        array_values($row)
-                    );
+                    $this->csvSafeAppend('orders.csv', array_keys($row), array_values($row));
                 } else {
-                    // Unknown type, log to errors
-                    $this->csvAppend('errors.csv',
+                    $this->csvSafeAppend('errors.csv',
                         ['time','delivery_id','reason','api_url'],
                         [now()->toDateTimeString(), $deliveryId, 'unknown_type', $apiUrl]
                     );
                 }
             } catch (\Throwable $e) {
-                $this->csvAppend('errors.csv',
+                $this->csvSafeAppend('errors.csv',
                     ['time','delivery_id','reason','api_url'],
                     [now()->toDateTimeString(), $deliveryId, substr($e->getMessage(), 0, 500), $apiUrl]
                 );
             }
         }
 
-        // 5) Acknowledge quickly
-        return response()->json(['ok' => true]);
+        // 5) Acknowledge quickly with text/plain
+        return response('ok', 200)->header('Content-Type', 'text/plain');
     }
 
     /** Heuristic: attendee vs order */
@@ -96,7 +82,6 @@ class EventbriteWebhookController extends Controller
         if (str_contains($u, '/attendees/')) return 'attendee';
         if (str_contains($u, '/orders/'))    return 'order';
 
-        // Fall back on keys
         if (Arr::has($resource, 'profile.email') || Arr::has($resource, 'profile.name')) return 'attendee';
         if (Arr::has($resource, 'email') && Arr::has($resource, 'event_id')) return 'order';
 
@@ -138,20 +123,43 @@ class EventbriteWebhookController extends Controller
         ];
     }
 
-    /** Append-only CSV helper */
-    private function csvAppend(string $filename, array $headers, array $row): void
+    /**
+     * Append-only CSV helper using Storage. Creates folder/file if missing.
+     * Never throws—logs warning instead.
+     */
+    private function csvSafeAppend(string $filename, array $headers, array $row): void
     {
-        $disk = Storage::disk('local'); // storage/app
-        if (! $disk->exists('eventbrite')) {
-            $disk->makeDirectory('eventbrite');
-        }
-        $path  = 'eventbrite/' . $filename;
-        $full  = storage_path('app/' . $path);
-        $isNew = ! file_exists($full);
+        try {
+            $disk = Storage::disk('local');   // storage/app
+            $dir  = 'eventbrite';
+            $path = $dir . '/' . ltrim($filename, '/');
 
-        $fh = fopen($full, 'a');
-        if ($isNew) fputcsv($fh, $headers);
-        fputcsv($fh, $row);
-        fclose($fh);
+            if (!$disk->exists($dir)) {
+                $disk->makeDirectory($dir, 0755, true, true);
+            }
+
+            if (!$disk->exists($path)) {
+                $disk->put($path, $this->csvLine($headers));
+            }
+
+            $disk->append($path, rtrim($this->csvLine($row), "\r\n"));
+        } catch (\Throwable $e) {
+            Log::warning('CSV append failed', [
+                'file'  => $filename,
+                'error' => $e->getMessage(),
+            ]);
+            // swallow error; do not break webhook
+        }
+    }
+
+    /** Build a CSV line in memory */
+    private function csvLine(array $fields): string
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $fields);
+        rewind($fp);
+        $line = (string) stream_get_contents($fp);
+        fclose($fp);
+        return $line;
     }
 }
