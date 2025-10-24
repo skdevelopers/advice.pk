@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
+
 class EventbriteAuthController extends Controller
 {
     /**
@@ -100,9 +101,8 @@ class EventbriteAuthController extends Controller
 
         // 5) Append CSV log (append-only, never overwrite)
         $this->csvAppend(
-            'oauth_users.csv',
-            ['time','user_id','name','email','provider_id','token_present'],
-            [now()->toDateTimeString(), (string) $user->id, $name, (string) $email, $pid, $ebUser->token ? 'yes' : 'no']
+            ['time', 'user_id', 'name', 'email', 'provider_id', 'token_present'],
+            [now()->toDateTimeString(), (string)$user->id, $name, (string)$email, $pid, $ebUser->token ? 'yes' : 'no']
         );
 
         // 6) Redirect
@@ -113,30 +113,41 @@ class EventbriteAuthController extends Controller
     /**
      * Append a row to CSV under storage/app/eventbrite/
      *
-     * @param  string $filename  e.g. oauth_users.csv
      * @param  array  $headers   header columns (written once if file new)
      * @param  array  $row       values (must align with headers)
      */
-    private function csvAppend(string $filename, array $headers, array $row): void
+    private function csvAppend(array $headers, array $row): void
     {
-        $disk = Storage::disk('local'); // storage/app
-        if (!$disk->exists('eventbrite')) {
-            $disk->makeDirectory('eventbrite');
-        }
-        $path  = 'eventbrite/' . ltrim($filename, '/');
-        $full  = storage_path('app/' . $path);
-        $isNew = !file_exists($full);
+        $disk = Storage::disk('local');           // writes under storage/app
+        $dir  = 'eventbrite';
+        $path = $dir . '/' . ltrim('oauth_users.csv', '/');
 
-        $fh = fopen($full, 'ab');       // binary-safe append
-        if ($fh === false) {
-            Log::warning('Unable to open CSV for append', ['path' => $full]);
-            return;
+        // 1) Ensure directory exists (recursive)
+        if (!$disk->exists($dir)) {
+            // 0755, recursive = true, force = true
+            $disk->makeDirectory($dir, 0755, true, true);
         }
 
-        if ($isNew) {
-            fputcsv($fh, $headers);
+        // 2) If file doesn't exist yet, write header line once
+        if (!$disk->exists($path)) {
+            // Build CSV header row
+            $headFp = fopen('php://temp', 'r+');
+            fputcsv($headFp, $headers);
+            rewind($headFp);
+            $headerLine = stream_get_contents($headFp) ?: '';
+            fclose($headFp);
+
+            $disk->put($path, $headerLine);
         }
-        fputcsv($fh, $row);
-        fclose($fh);
+
+        // 3) Append the data row (as proper CSV)
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $row);
+        rewind($fp);
+        $line = stream_get_contents($fp) ?: '';
+        fclose($fp);
+
+        // Storage::append adds a newline; trim our temp line just in case
+        $disk->append($path, rtrim($line, "\r\n"));
     }
 }
