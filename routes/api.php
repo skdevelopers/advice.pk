@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Auth\EventbriteAuthController;
 use App\Http\Controllers\FrontPropertyController;
+use App\Http\Controllers\Webhook\EventbriteWebhookController;
 use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
