@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\PropertyController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SocietyController;
 use App\Http\Controllers\Admin\SocietyPageController;
 use App\Http\Controllers\Admin\SubSectorController;
@@ -22,6 +23,8 @@ Route::get('/', function () {
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 
 Route::get('/chat', [ChatController::class, 'index'])->name('chat');
+Route::get('/settings', [SettingsController::class, 'index'])
+    ->name('settings');
 
 Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
     ->name('properties.show');
