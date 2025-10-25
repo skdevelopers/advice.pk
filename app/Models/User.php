@@ -120,5 +120,5 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserIdentity::class, 'user_id');
     }
-    
+
 }

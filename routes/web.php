@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -19,6 +20,9 @@ Route::get('/', function () {
     return view('front.home');
 });
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+
+Route::get('/chat', [ChatController::class, 'index'])->name('chat');
+
 Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
     ->name('properties.show');
 Route::post('/auth/login', [AuthController::class, 'login']);
