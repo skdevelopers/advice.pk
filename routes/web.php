@@ -25,6 +25,8 @@ Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 Route::get('/chat', [ChatController::class, 'index'])->name('chat');
 Route::get('/settings', [SettingsController::class, 'index'])
     ->name('settings');
+Route::get('/lockscreen', [LockscreenController::class, 'index'])
+    ->name('lockscreen');
 
 Route::get('properties/{slug}', [FrontPropertyController::class, 'show'])
     ->name('properties.show');
