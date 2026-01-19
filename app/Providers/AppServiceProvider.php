@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Eventbrite\EventbriteExtendSocialite;
@@ -28,8 +27,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Registers components in resources/views/admin/components under the 'admin' namespace
-        Blade::anonymousComponentPath(resource_path('views/admin/components'), 'admin');
         Event::listen(SocialiteWasCalled::class, [EventbriteExtendSocialite::class, 'handle']);
     }
 }
