@@ -194,7 +194,7 @@
                                                placeholder="Sub Sector Name"
                                                class="w-full border rounded px-3 py-2 mb-3">
 
-                                        <x-admin::quill
+                                        <x-admin.quill
                                             :uid="`sub_${row.uid}_detail`"
                                             :name="`sub_sectors[${i}][detail]`"
                                             placeholder="Describe sub sector..."
