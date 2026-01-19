@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AiEditorController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CityController;
@@ -50,8 +51,9 @@ Route::prefix('admin')->group(function () {
         return view('admin.dashboard.index'); // resources/views/admin/dashboard/index.blade.php
     })->name('admin.dashboard');
 
-    Route::post('/admin/ai/editor/transform', [AiEditorController::class, 'transform'])
+    Route::post('/ai/editor/transform', [AiEditorController::class, 'transform'])
         ->name('admin.ai.editor.transform');
+    Route::post('/admin/ai/quill', [AiEditorController::class, 'quill']);
 
     Route::resource('blogs', BlogController::class)->names([
         'index'   => 'admin.blogs.index',

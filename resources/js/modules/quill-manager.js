@@ -195,6 +195,31 @@
         });
     };
 
+    const autoSeoFromHtml = async (type, html) => {
+        try {
+            const res = await axios.post('/admin/ai/seo-from-html', {
+                entity: 'society',
+                type,
+                html,
+            });
+
+            if (!res?.data) return;
+
+            const { seo_title, seo_description, seo_keywords } = res.data;
+
+            const t = document.querySelector(`[name="${type}_title"]`);
+            const d = document.querySelector(`[name="${type}_description"]`);
+            const k = document.querySelector(`[name="${type}_keywords"]`);
+
+            if (t && seo_title) t.value = seo_title;
+            if (d && seo_description) d.value = seo_description;
+            if (k && seo_keywords) k.value = seo_keywords;
+
+        } catch (e) {
+            console.warn('SEO sync failed');
+        }
+    };
+
     const boot = () => {
         initWithin(document);
         bindAIButtons();

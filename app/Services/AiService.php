@@ -15,17 +15,19 @@ use RuntimeException;
 final class AiService
 {
     /**
-     * Chat Completions endpoint (stable for text editing).
+     * Chat Completions endpoint.
      */
     private const BASE_URL = 'https://api.openai.com/v1/chat/completions';
 
     /**
-     * Best cost-quality model for CMS/editor use.
+     * Stable cost-quality model.
      */
-    private const MODEL = 'gpt-4.1-mini';
+    private const MODEL = 'gpt-4o-mini';
 
     /**
      * Transform editor text (rewrite / expand / shorten).
+     *
+     * @throws ConnectionException
      */
     public function transformEditorText(
         string $entity,
@@ -47,39 +49,40 @@ final class AiService
         };
 
         $system = <<<SYS
-You are a professional real estate content writer.
-Output ONLY clean HTML for Quill editor.
+                    You are a professional real estate content writer.
 
-Allowed tags:
-p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
+                    Output ONLY clean HTML suitable for a Quill editor.
 
-Rules:
-- No scripts
-- No inline styles
-- No hallucinations
-- English only
-SYS;
+                    Allowed tags:
+                    p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
 
-        $user = <<<TXT
-Entity: {$entity}
-Type: {$type}
+                    Rules:
+                    - No scripts
+                    - No inline styles
+                    - No hallucinations
+                    - English only
+                    SYS;
 
-Task:
-{$instruction}
+                            $user = <<<TXT
+                    Entity: {$entity}
+                    Type: {$type}
 
-Input:
-{$text}
-TXT;
+                    Task:
+                    {$instruction}
 
-        $response = Http::withToken($key)
-            ->post(self::BASE_URL, [
-                'model' => self::MODEL,
-                'temperature' => 0.6,
-                'messages' => [
-                    ['role' => 'system', 'content' => $system],
-                    ['role' => 'user', 'content' => $user],
-                ],
-            ]);
+                    Input:
+                    {$text}
+                    TXT;
+
+        $response = Http::withToken($key)->post(self::BASE_URL, [
+            'model' => self::MODEL,
+            'temperature' => 0.6,
+            'max_tokens' => 900,
+            'messages' => [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $user],
+            ],
+        ]);
 
         if ($response->failed()) {
             throw new RuntimeException(
@@ -93,7 +96,7 @@ TXT;
     }
 
     /**
-     * Minimal HTML allowlist sanitizer.
+     * Minimal HTML allowlist sanitizer (frontend-safe complement).
      */
     private function basicHtmlAllowlist(string $html): string
     {
