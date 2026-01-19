@@ -50,6 +50,9 @@ Route::prefix('admin')->group(function () {
         return view('admin.dashboard.index'); // resources/views/admin/dashboard/index.blade.php
     })->name('admin.dashboard');
 
+    Route::post('/admin/ai/editor/transform', [AiEditorController::class, 'transform'])
+        ->name('admin.ai.editor.transform');
+
     Route::resource('blogs', BlogController::class)->names([
         'index'   => 'admin.blogs.index',
         'create'  => 'admin.blogs.create',

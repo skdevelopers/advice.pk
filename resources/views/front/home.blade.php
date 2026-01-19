@@ -118,7 +118,7 @@
     @include('front.partials.hero')
     @include('front.partials.property-tabs')
     @include('front.partials.property-categories')
-    @include('front.partials.featured-properties')
+{{--    @include('front.partials.featured-properties')--}}
     @include('front.partials.videos')
 @endsection
 
