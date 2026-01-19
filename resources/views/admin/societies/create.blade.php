@@ -29,17 +29,17 @@
                         @csrf
 
                         <div class="mb-4">
-                            <label for="name" class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Society Name</label>
+                            <label for="name" class="block text-green-600 dark:text-gray-200 font-medium mb-2">Society Name</label>
                             <input type="text" name="name" id="name" class="w-full border px-3 py-2 rounded" required>
                         </div>
 
                         <div class="mb-4">
-                            <label for="slug" class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Slug</label>
+                            <label for="slug" class="block text-green-600 dark:text-gray-200 font-medium mb-2">Slug</label>
                             <input type="text" name="slug" id="slug" class="w-full border px-3 py-2 rounded" required>
                         </div>
 
                         <div class="mb-4">
-                            <label for="city_id" class="block text-gray-700 dark:text-gray-200 font-medium mb-2">City</label>
+                            <label for="city_id" class="block text-green-600 dark:text-gray-200 font-medium mb-2">City</label>
                             <select name="city_id" id="city_id" class="w-full border px-3 py-2 rounded" required>
                                 @foreach($cities as $city)
                                     <option value="{{ $city->id }}">{{ $city->name }}</option>
@@ -48,7 +48,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="user_id" class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Assigned User</label>
+                            <label for="user_id" class="block text-green-600 dark:text-gray-200 font-medium mb-2">Assigned User</label>
                             <select name="user_id" id="user_id" class="w-full border px-3 py-2 rounded" required>
                                 @foreach($users as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -57,12 +57,12 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="overview" class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Overview</label>
+                            <label for="overview" class="block text-green-600 dark:text-gray-200 font-medium mb-2">Overview</label>
                             <textarea name="overview" id="overview" rows="3" class="w-full border px-3 py-2 rounded"></textarea>
                         </div>
 
                         <div class="mb-4">
-                            <label for="detail" class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Detail</label>
+                            <label for="detail" class="block text-green-600 dark:text-gray-200 font-medium mb-2">Detail</label>
                             <textarea name="detail" id="detail" rows="4" class="w-full border px-3 py-2 rounded"></textarea>
                         </div>
 
@@ -72,7 +72,7 @@
 
                                 {{-- MAIN IMAGE --}}
                                 <div data-preview-wrap class="society-image-block">
-                                    <p class="font-medium mb-4 text-gray-700 dark:text-gray-200">Upload your main property image here</p>
+                                    <p class="font-medium mb-4 text-green-600 dark:text-gray-200">Upload your main property image here</p>
 
                                     <div class="preview-box relative w-full h-60 overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50 dark:bg-slate-800 flex items-center justify-center">
                                         <span class="text-xs text-gray-500 dark:text-slate-300 text-center px-4">
@@ -89,7 +89,7 @@
 
                                 {{-- BANNER IMAGE --}}
                                 <div data-preview-wrap class="society-image-block">
-                                    <p class="font-medium mb-4 text-gray-700 dark:text-gray-200">Upload your banner property image here</p>
+                                    <p class="font-medium mb-4 text-green-600 dark:text-gray-200">Upload your banner property image here</p>
 
                                     <div class="preview-box relative w-full h-60 overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50 dark:bg-slate-800 flex items-center justify-center">
                                         <span class="text-xs text-gray-500 dark:text-slate-300 text-center px-4">
@@ -109,7 +109,7 @@
 
                         <!-- Status Toggle -->
                         <div class="mb-6 mt-6" x-data="{ enabled: true }">
-                            <label class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Status</label>
+                            <label class="block text-green-600 dark:text-gray-200 font-medium mb-2">Status</label>
                             <label class="flex items-center space-x-3 cursor-pointer select-none">
                                 <div
                                     :class="enabled ? 'bg-green-600' : 'bg-gray-300'"
@@ -178,17 +178,17 @@
                                             </h4>
 
                                             <div class="mb-2">
-                                                <label class="text-sm block mb-1 text-gray-700 dark:text-gray-200">Title</label>
+                                                <label class="text-sm block mb-1 text-green-600 dark:text-gray-200">Title</label>
                                                 <input type="text" name="{{ $type }}_title" class="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             </div>
 
                                             <div class="mb-3">
-                                                <label class="text-sm block mb-1 text-gray-700 dark:text-gray-200">Meta Description</label>
+                                                <label class="text-sm block mb-1 text-green-600 dark:text-gray-200">Meta Description</label>
                                                 <textarea name="{{ $type }}_description" rows="2" class="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                                             </div>
 
                                             <div class="mb-4">
-                                                <label class="text-sm block mb-1 font-medium text-gray-700 dark:text-gray-200">
+                                                <label class="text-sm block mb-1 font-medium text-green-600 dark:text-gray-200">
                                                     About {{ ucwords(str_replace('_', ' ', $type)) }}
                                                 </label>
 
@@ -242,7 +242,7 @@
                              }"
                              x-effect="if (hasSubSectors) { $nextTick(() => { feather.replace(); window.reInitAllSubEditors(subSectors.length); }) }"
                         >
-                            <label class="block text-gray-700 dark:text-gray-200 font-medium mb-2">Society Has Sub Societies:</label>
+                            <label class="block text-green-600 dark:text-gray-200 font-medium mb-2">Society Has Sub Societies:</label>
 
                             <label class="flex items-center space-x-3 cursor-pointer select-none">
                                 <div
@@ -302,7 +302,7 @@
                                                        x-model="subSector.slug">
 
                                                 <div class="mt-3">
-                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Sub Description</label>
+                                                    <label class="block text-sm font-medium text-green-600 mb-1">Sub Description</label>
 
                                                     <!-- IMPORTANT: toolbar must NOT be x-ignore -->
                                                     <div :id="`sub_toolbar_${index}`"
@@ -327,7 +327,7 @@
                                                 </div>
 
                                                 <div class="mt-3" data-preview-wrap>
-                                                    <label class="block text-sm text-gray-700 mb-1">Sub Image</label>
+                                                    <label class="block text-sm text-green-600 mb-1">Sub Image</label>
 
                                                     <div class="preview-box relative w-full h-36 overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
                                                         Image preview here
