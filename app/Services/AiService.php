@@ -4,59 +4,110 @@ namespace App\Services;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 /**
- * AiService
+ * Class AiService
  *
- * Handles AI-based SEO generation using OpenAI.
+ * Central AI service for SEO + editor content transforms.
+ * Optimized for Quill editors.
  */
-class AiService
+final class AiService
 {
     /**
-     * Generate SEO metadata for a given title.
-     *
-     * @param string $title
-     * @return array
-     * @throws ConnectionException
+     * Chat Completions endpoint (stable for text editing).
      */
-    public function generate(string $title): array
+    private const BASE_URL = 'https://api.openai.com/v1/chat/completions';
+
+    /**
+     * Best cost-quality model for CMS/editor use.
+     */
+    private const MODEL = 'gpt-4.1-mini';
+
+    /**
+     * Transform editor text (rewrite / expand / shorten).
+     */
+    public function transformEditorText(
+        string $entity,
+        string $type,
+        string $action,
+        string $text
+    ): string {
+        $key = trim((string) config('services.openai.key', env('OPENAI_API_KEY')));
+
+        if ($key === '') {
+            throw new RuntimeException('OPENAI_API_KEY is missing.');
+        }
+
+        $instruction = match ($action) {
+            'rewrite' => 'Rewrite professionally, improve clarity and SEO.',
+            'expand'  => 'Expand with more detail, add headings and bullet points.',
+            'shorten' => 'Shorten while keeping key points and SEO value.',
+            default   => 'Rewrite professionally.',
+        };
+
+        $system = <<<SYS
+You are a professional real estate content writer.
+Output ONLY clean HTML for Quill editor.
+
+Allowed tags:
+p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
+
+Rules:
+- No scripts
+- No inline styles
+- No hallucinations
+- English only
+SYS;
+
+        $user = <<<TXT
+Entity: {$entity}
+Type: {$type}
+
+Task:
+{$instruction}
+
+Input:
+{$text}
+TXT;
+
+        $response = Http::withToken($key)
+            ->post(self::BASE_URL, [
+                'model' => self::MODEL,
+                'temperature' => 0.6,
+                'messages' => [
+                    ['role' => 'system', 'content' => $system],
+                    ['role' => 'user', 'content' => $user],
+                ],
+            ]);
+
+        if ($response->failed()) {
+            throw new RuntimeException(
+                'OpenAI error: ' . ($response->json('error.message') ?? $response->body())
+            );
+        }
+
+        $html = trim((string) $response->json('choices.0.message.content'));
+
+        return $this->basicHtmlAllowlist($html);
+    }
+
+    /**
+     * Minimal HTML allowlist sanitizer.
+     */
+    private function basicHtmlAllowlist(string $html): string
     {
-        $prompt = <<<PROMPT
-                    You are an SEO expert. Based on the given page title, generate:
-                    - A clear and concise SEO Title (max 60 characters)
-                    - A compelling SEO Description (max 150 characters)
-                    - A set of comma-separated SEO Keywords
-                    
-                    Title: "{$title}"
-                    
-                    Respond in the following format:
-                    SEO Title: ...
-                    SEO Description: ...
-                    SEO Keywords: ...
-                    PROMPT;
+        if ($html === '') {
+            return '';
+        }
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
-        ])->post('https://api.openai.com/v1/chat/completions', [
-            'model' => 'gpt-3.5-turbo',
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are an SEO expert.'],
-                ['role' => 'user', 'content' => $prompt],
-            ],
-            'max_tokens' => 300,
-        ]);
+        $allowed = '<p><br><strong><em><u><a><ul><ol><li><h2><h3><blockquote>';
+        $clean = strip_tags($html, $allowed);
 
-        $text = $response->json('choices.0.message.content', '');
+        $clean = preg_replace('/\son\w+="[^"]*"/i', '', $clean);
+        $clean = preg_replace('/\sstyle="[^"]*"/i', '', $clean);
+        $clean = preg_replace('/href="javascript:[^"]*"/i', 'href="#"', $clean);
 
-        // Parse AI response
-        preg_match('/SEO Title:\s*(.+)/i', $text, $titleMatch);
-        preg_match('/SEO Description:\s*(.+)/i', $text, $descMatch);
-        preg_match('/SEO Keywords:\s*(.+)/i', $text, $keywordsMatch);
-
-        return [
-            'seo_title' => trim($titleMatch[1] ?? substr($text, 0, 60)),
-            'seo_description' => trim($descMatch[1] ?? substr($text, 0, 150)),
-            'seo_keywords' => trim($keywordsMatch[1] ?? ''),
-        ];
+        return trim($clean);
     }
 }
