@@ -375,7 +375,7 @@
 
         </div>
     </div>
-@endsection
+
 
 @push('scripts')
     <script>
@@ -453,4 +453,85 @@
             });
         })();
     </script>
+    <script>
+        (() => {
+            'use strict';
+
+            /**
+             * AI → Quill bridge
+             * - Uses existing buttons
+             * - Uses existing QuillManager
+             * - Uses existing controller
+             * - ZERO UI changes
+             */
+
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('[data-ai-action]');
+                if (!btn) return;
+
+                const action = btn.getAttribute('data-ai-action'); // rewrite | expand | shorten
+                const type   = btn.getAttribute('data-ai-type');   // residential_plots etc
+                if (!action || !type) return;
+
+                const uid = `${type}_about`;
+                const quill = window.QuillManager?.editors?.[uid];
+
+                if (!quill) {
+                    window.showToast?.('Editor not ready yet', 'warning');
+                    return;
+                }
+
+                const selection = quill.getSelection();
+                const hasSelection = selection && selection.length > 0;
+
+                const text = hasSelection
+                    ? quill.getText(selection.index, selection.length).trim()
+                    : quill.getText().trim();
+
+                if (!text) {
+                    window.showToast?.('Write something first', 'warning');
+                    return;
+                }
+
+                btn.disabled = true;
+
+                try {
+                    window.showToast?.('AI is working…', 'info');
+
+                    const res = await axios.post(
+                        '{{ route("admin.ai.editor.transform") }}',
+                        {
+                            entity: 'society',
+                            type,
+                            action,
+                            text
+                        }
+                    );
+
+                    const html = res?.data?.html;
+                    if (!html) throw new Error('Empty AI response');
+
+                    if (hasSelection) {
+                        quill.deleteText(selection.index, selection.length, 'user');
+                        quill.clipboard.dangerouslyPasteHTML(selection.index, html, 'user');
+                    } else {
+                        quill.setText('');
+                        quill.clipboard.dangerouslyPasteHTML(0, html, 'user');
+                    }
+
+                    // sync hidden input
+                    const hidden = document.getElementById(uid);
+                    if (hidden) hidden.value = quill.root.innerHTML;
+
+                    window.showToast?.('AI applied', 'success');
+                } catch (err) {
+                    console.error(err);
+                    window.showToast?.('AI failed', 'error');
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        })();
+    </script>
+
 @endpush
