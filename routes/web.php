@@ -53,7 +53,9 @@ Route::prefix('admin')->group(function () {
 
     Route::post('/ai/editor/transform', [AiEditorController::class, 'transform'])
         ->name('admin.ai.editor.transform');
-    Route::post('/admin/ai/quill', [AiEditorController::class, 'quill']);
+    Route::post('/ai/quill', [AiEditorController::class, 'quill']);
+    Route::post('/ai/editor/transform', [AiEditorController::class, 'transform'])
+        ->name('admin.ai.editor.transform');
 
     Route::resource('blogs', BlogController::class)->names([
         'index'   => 'admin.blogs.index',

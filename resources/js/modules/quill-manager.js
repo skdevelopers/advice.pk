@@ -2,74 +2,103 @@
 (() => {
     'use strict';
 
+    /**
+     * QuillManager
+     * Written By Salman @ SK Developers https://skdevelopers.info
+     * - Initializes Quill instances from markup that follows:
+     *   toolbar:  #toolbar_<uid>
+     *   editor:   #editor_<uid>
+     *   hidden:   #<uid> (input[type="hidden"])
+     *
+     * - Supports dynamic Alpine rows (call initWithin(container) after DOM updates)
+     * - Supports AI buttons using data-ai-* attributes:
+     *   [data-ai-action="rewrite|expand|shorten"] + data-ai-type="residential_plots"
+     *
+     * IMPORTANT:
+     * - DOES NOT change any layout/design.
+     * - Purely behavior.
+     */
+
     const editors = Object.create(null);
 
-    const q = (sel, root = document) => root.querySelector(sel);
+    const $ = (sel, root = document) => root.querySelector(sel);
 
-    const toast = (type, message) => {
-        window.dispatchEvent(new CustomEvent('toast', { detail: { type, message } }));
+    const toast = (message, type = 'info') => {
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
+            return;
+        }
+        window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
     };
-
-    const slugify = (s) => (s || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
 
     const sanitizeBasic = (html) => {
-        // Frontend “minimal safe” - backend should do SSR-safe sanitation too.
+        // Frontend minimal guard. Backend MUST sanitize too (you already do allowlist).
         const div = document.createElement('div');
         div.innerHTML = html || '';
-
         div.querySelectorAll('script, style, iframe, object, embed').forEach(n => n.remove());
         div.querySelectorAll('*').forEach(el => {
-            el.removeAttribute('style');
-            el.removeAttribute('class');
-            el.removeAttribute('onload');
-            el.removeAttribute('onclick');
-            el.removeAttribute('onerror');
+            // Remove obvious dangerous attributes
+            [...el.attributes].forEach(attr => {
+                const n = (attr.name || '').toLowerCase();
+                if (n.startsWith('on')) el.removeAttribute(attr.name);
+                if (n === 'style') el.removeAttribute(attr.name);
+            });
         });
-
-        return div.innerHTML;
+        return div.innerHTML.trim();
     };
 
+    /**
+     * Initialize a single editor by uid.
+     * @param {string} uid
+     * @param {{ value?: string }} opts
+     * @returns {Quill|null}
+     */
     const initOnce = (uid, opts = {}) => {
-        if (!uid || editors[uid]) return editors[uid] || null;
+        if (!uid) return null;
+        if (editors[uid]) return editors[uid];
 
-        const wrap = q(`[data-quill-wrap][data-quill-uid="${uid}"]`);
+        const wrap = document.querySelector(`[data-quill-wrap][data-quill-uid="${uid}"]`);
         if (!wrap) return null;
 
-        const editorEl = q(`#editor_${uid}`, wrap);
-        const toolbarEl = q(`#toolbar_${uid}`, wrap);
-        const hiddenEl = q(`#${uid}[data-quill-hidden]`, wrap);
+        const editorEl  = $(`#editor_${uid}`, wrap);
+        const toolbarEl = $(`#toolbar_${uid}`, wrap);
+        const hiddenEl  = $(`#${uid}`, wrap);
+
         if (!editorEl || !toolbarEl || !hiddenEl) return null;
+        if (!window.Quill) return null;
 
         const placeholder = wrap.getAttribute('data-quill-placeholder') || 'Write here...';
 
-        const instance = new Quill(editorEl, {
+        const ql = new Quill(editorEl, {
             theme: 'snow',
             modules: { toolbar: toolbarEl },
             placeholder,
         });
 
-        // Prefill (EDIT page)
+        // Prefill
         const prefill = (opts.value ?? hiddenEl.value ?? '').trim();
-        if (prefill) instance.clipboard.dangerouslyPasteHTML(prefill);
+        if (prefill) {
+            ql.clipboard.dangerouslyPasteHTML(prefill);
+        }
 
-        // Sync hidden input
+        // Sync hidden input with RAF throttle (micro-optimized)
         let raf = 0;
-        instance.on('text-change', () => {
+        ql.on('text-change', () => {
             if (raf) cancelAnimationFrame(raf);
             raf = requestAnimationFrame(() => {
-                hiddenEl.value = instance.root.innerHTML;
+                hiddenEl.value = ql.root.innerHTML;
             });
         });
 
-        editors[uid] = instance;
-        return instance;
+        editors[uid] = ql;
+        return ql;
     };
 
+    /**
+     * Initialize all editors inside a DOM root.
+     * @param {HTMLElement|Document} root
+     * @returns {void}
+     */
     const initWithin = (root = document) => {
         root.querySelectorAll('[data-quill-wrap][data-quill-uid]').forEach((wrap) => {
             const uid = wrap.getAttribute('data-quill-uid');
@@ -78,75 +107,89 @@
         });
     };
 
-    // ---------- AI helpers ----------
-    const aiCall = async ({ mode, type, title, currentHtml }) => {
-        // You will implement your backend endpoint accordingly
-        const res = await axios.post('/admin/ai/quill', {
+    /**
+     * AI transform call (rewrite/expand/shorten)
+     * Backend route MUST exist: admin.ai.editor.transform
+     * Payload: { entity, type, action, text }
+     */
+    const aiTransform = async (type, action, text) => {
+        const res = await axios.post('/admin/ai/editor/transform', {
             entity: 'society',
-            mode,           // generate | rewrite | expand | shorten
-            type,           // residential_plots etc
-            title,
-            html: currentHtml || '',
+            type,
+            action,
+            text,
         });
-        return res?.data?.html || '';
+
+        return (res?.data?.html || '').trim();
     };
 
-    const getTitleForType = (type) => {
-        return (
-            q(`[name="${type}_title"]`)?.value ||
-            q('#name')?.value ||
-            ''
-        );
-    };
-
-    const bindAIButtons = () => {
+    /**
+     * Click handler for AI buttons.
+     * Expected buttons:
+     *  <button data-ai-action="rewrite" data-ai-type="apartments">R</button>
+     */
+    const bindAiButtons = () => {
         document.addEventListener('click', async (e) => {
-            const btn = e.target?.closest?.('[data-ai-generate],[data-ai-rewrite],[data-ai-expand],[data-ai-shorten]');
+            const btn = e.target?.closest?.('[data-ai-action][data-ai-type]');
             if (!btn) return;
 
-            const type = btn.getAttribute('data-ai-type') || '';
-            if (!type) return;
+            const action = btn.getAttribute('data-ai-action');
+            const type = btn.getAttribute('data-ai-type');
 
-            const uid = `${type}_about`; // IMPORTANT: your hidden field id must follow this pattern
-            const editor = editors[uid] || initOnce(uid);
-            if (!editor) {
-                toast('error', 'Editor not ready.');
+            if (!action || !type) return;
+
+            // Our convention: hidden input id for property "about" is: `${type}_about`
+            const uid = `${type}_about`;
+
+            const ql = editors[uid] || initOnce(uid);
+            if (!ql) {
+                toast('Editor not ready. Open the section first.', 'warning');
                 return;
             }
 
-            const title = getTitleForType(type);
-            if (!title) {
-                toast('warning', 'Please enter a title first.');
+            const sel = ql.getSelection();
+            const hasSel = !!(sel && sel.length && sel.length > 0);
+
+            const sourceText = hasSel
+                ? (ql.getText(sel.index, sel.length) || '').trim()
+                : (ql.getText() || '').trim();
+
+            if (!sourceText) {
+                toast('Write something first.', 'warning');
                 return;
             }
-
-            const mode = btn.hasAttribute('data-ai-generate') ? 'generate'
-                : btn.hasAttribute('data-ai-rewrite') ? 'rewrite'
-                : btn.hasAttribute('data-ai-expand') ? 'expand'
-                : 'shorten';
 
             btn.disabled = true;
             btn.classList.add('opacity-60');
 
             try {
-                const current = editor.root.innerHTML || '';
-                const html = await aiCall({ mode, type, title, currentHtml: current });
+                toast('AI working...', 'info');
+
+                const html = await aiTransform(type, action, sourceText);
                 const clean = sanitizeBasic(html);
 
                 if (!clean) {
-                    toast('error', 'AI returned empty content.');
+                    toast('AI returned empty content.', 'error');
                     return;
                 }
 
-                editor.clipboard.dangerouslyPasteHTML(clean);
-                const hidden = q(`#${uid}`);
-                if (hidden) hidden.value = clean;
+                if (hasSel) {
+                    ql.deleteText(sel.index, sel.length, 'user');
+                    ql.clipboard.dangerouslyPasteHTML(sel.index, clean, 'user');
+                } else {
+                    ql.setText('', 'silent');
+                    ql.clipboard.dangerouslyPasteHTML(0, clean, 'user');
+                }
 
-                toast('success', `AI ${mode} done.`);
+                // Ensure hidden is updated now
+                const hiddenEl = document.getElementById(uid);
+                if (hiddenEl) hiddenEl.value = ql.root.innerHTML;
+
+                toast('Done ✅', 'success');
             } catch (err) {
                 // eslint-disable-next-line no-console
                 console.error(err);
-                toast('error', 'AI request failed.');
+                toast(err?.response?.data?.message || 'AI failed', 'error');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-60');
@@ -154,77 +197,9 @@
         });
     };
 
-    const bindSlug = () => {
-        const nameEl = q('#name');
-        const slugEl = q('#slug');
-        if (!nameEl || !slugEl) return;
-
-        let manual = false;
-        slugEl.addEventListener('input', () => { manual = true; });
-
-        nameEl.addEventListener('input', () => {
-            if (manual) return;
-            slugEl.value = slugify(nameEl.value);
-        });
-    };
-
-    const bindFilePreview = () => {
-        document.addEventListener('change', (e) => {
-            const input = e.target;
-            if (!input || input.type !== 'file') return;
-
-            const file = input.files?.[0];
-            if (!file || !file.type?.startsWith('image/')) return;
-
-            // Find nearest block that contains preview-box
-            const wrap = input.closest('.society-image-block') || input.closest('[data-preview-wrap]') || input.parentElement;
-            if (!wrap) return;
-
-            const preview = wrap.querySelector('.preview-box');
-            if (!preview) return;
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                preview.innerHTML = `
-                    <img src="${reader.result}"
-                         alt="Preview"
-                         class="absolute inset-0 w-full h-full object-contain rounded-md" />
-                `;
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const autoSeoFromHtml = async (type, html) => {
-        try {
-            const res = await axios.post('/admin/ai/seo-from-html', {
-                entity: 'society',
-                type,
-                html,
-            });
-
-            if (!res?.data) return;
-
-            const { seo_title, seo_description, seo_keywords } = res.data;
-
-            const t = document.querySelector(`[name="${type}_title"]`);
-            const d = document.querySelector(`[name="${type}_description"]`);
-            const k = document.querySelector(`[name="${type}_keywords"]`);
-
-            if (t && seo_title) t.value = seo_title;
-            if (d && seo_description) d.value = seo_description;
-            if (k && seo_keywords) k.value = seo_keywords;
-
-        } catch (e) {
-            console.warn('SEO sync failed');
-        }
-    };
-
     const boot = () => {
         initWithin(document);
-        bindAIButtons();
-        bindSlug();
-        bindFilePreview();
+        bindAiButtons();
     };
 
     if (document.readyState === 'loading') {
@@ -233,7 +208,6 @@
         boot();
     }
 
-    // Public API for Alpine dynamic rows:
     window.QuillManager = {
         initOnce,
         initWithin,
