@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Add Society - Advice Associates')
+@section('title', 'Add Society - Advice Associates AI Real Estate CRM')
 
 @section('content')
     <div class="container-fluid relative px-3">
@@ -375,7 +375,7 @@
 
         </div>
     </div>
-
+@endsection
 
 @push('scripts')
     <script>
