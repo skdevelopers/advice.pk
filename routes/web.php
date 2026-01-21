@@ -21,6 +21,15 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('front.home');
 });
+
+Route::get('/_debug/openai', function () {
+    return [
+        'env_key_exists' => env('OPENAI_API_KEY') ? 'yes' : 'no',
+        'config_key'     => config('services.openai.key') ? 'yes' : 'no',
+        'key_preview'    => substr((string) config('services.openai.key'), 0, 10),
+    ];
+});
+
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
 
 Route::get('/chat', [ChatController::class, 'index'])->name('chat');
