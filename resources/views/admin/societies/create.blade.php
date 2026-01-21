@@ -537,79 +537,82 @@
         (() => {
             'use strict';
 
-            if (!window.QuillManager) {
-                console.warn('QuillManager not found');
-                return;
-            }
+            document.addEventListener('DOMContentLoaded', () => {
 
-            document.addEventListener('click', async (e) => {
-                const btn = e.target.closest('[data-ai-action]');
-                if (!btn) return;
-
-                const action = btn.dataset.aiAction;   // rewrite | expand | shorten
-                const type   = btn.dataset.aiType;     // residential_plots, etc.
-
-                if (!action || !type) return;
-
-                const editorKey = `${type}_about`;
-                const quill = window.QuillManager.editors?.[editorKey];
-
-                if (!quill) {
-                    window.showToast?.('Editor not ready yet', 'warning');
+                if (!window.QuillManager) {
+                    console.warn('QuillManager not ready yet');
                     return;
                 }
 
-                const selection = quill.getSelection();
-                const hasSelection = selection && selection.length > 0;
+                document.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('[data-ai-action]');
+                    if (!btn) return;
 
-                const sourceText = hasSelection
-                    ? quill.getText(selection.index, selection.length).trim()
-                    : quill.getText().trim();
+                    const action = btn.dataset.aiAction; // rewrite | expand | shorten
+                    const type   = btn.dataset.aiType;   // residential_plots
 
-                if (!sourceText) {
-                    window.showToast?.('Write something first', 'warning');
-                    return;
-                }
+                    if (!action || !type) return;
 
-                window.showToast?.('AI working…', 'info');
+                    const editorKey = `${type}_about`;
+                    const quill = window.QuillManager.editors?.[editorKey];
 
-                try {
-                    const res = await axios.post(
-                        '{{ route("admin.ai.editor.transform") }}',
-                        {
-                            entity: 'society',
-                            type: type,
-                            action: action,
-                            text: sourceText
-                        }
-                    );
-
-                    const html = res?.data?.html;
-                    if (!html) throw new Error('Empty AI response');
-
-                    if (hasSelection) {
-                        quill.deleteText(selection.index, selection.length, 'user');
-                        quill.clipboard.dangerouslyPasteHTML(selection.index, html, 'user');
-                    } else {
-                        quill.setContents([], 'silent');
-                        quill.clipboard.dangerouslyPasteHTML(0, html, 'user');
+                    if (!quill) {
+                        window.showToast?.('Editor not ready yet', 'warning');
+                        return;
                     }
 
-                    // sync hidden input
-                    const hidden = document.querySelector(
-                        `input[name="${editorKey}"]`
-                    );
-                    if (hidden) hidden.value = quill.root.innerHTML;
+                    const selection = quill.getSelection();
+                    const hasSelection = selection && selection.length > 0;
 
-                    window.showToast?.('AI done ✅', 'success');
+                    const sourceText = hasSelection
+                        ? quill.getText(selection.index, selection.length).trim()
+                        : quill.getText().trim();
 
-                } catch (err) {
-                    console.error(err);
-                    window.showToast?.(
-                        err?.response?.data?.message || 'AI failed',
-                        'error'
-                    );
-                }
+                    if (!sourceText) {
+                        window.showToast?.('Write something first', 'warning');
+                        return;
+                    }
+
+                    window.showToast?.('AI working…', 'info');
+
+                    try {
+                        const res = await axios.post(
+                            '{{ route("admin.ai.editor.transform") }}',
+                            {
+                                entity: 'society',
+                                type,
+                                action,
+                                text: sourceText
+                            }
+                        );
+
+                        const html = res?.data?.html;
+                        if (!html) throw new Error('Empty AI response');
+
+                        if (hasSelection) {
+                            quill.deleteText(selection.index, selection.length, 'user');
+                            quill.clipboard.dangerouslyPasteHTML(selection.index, html, 'user');
+                        } else {
+                            quill.setContents([], 'silent');
+                            quill.clipboard.dangerouslyPasteHTML(0, html, 'user');
+                        }
+
+                        // sync hidden input
+                        const hidden = document.querySelector(
+                            `input[name="${editorKey}"]`
+                        );
+                        if (hidden) hidden.value = quill.root.innerHTML;
+
+                        window.showToast?.('AI done ✅', 'success');
+
+                    } catch (err) {
+                        console.error(err);
+                        window.showToast?.(
+                            err?.response?.data?.message || 'AI failed',
+                            'error'
+                        );
+                    }
+                });
             });
         })();
     </script>
