@@ -22,7 +22,7 @@
             </div>
 
             <div class="grid grid-cols-1 mt-6">
-                <div class="rounded-md shadow-sm dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
+                <div class="rounded-md text-green-600 shadow-sm dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
 
                     <form id="createSocietyForm" enctype="multipart/form-data">
                         @csrf
