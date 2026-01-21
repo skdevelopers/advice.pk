@@ -10,19 +10,19 @@ use RuntimeException;
  * Class AiService
  *
  * Central AI service for SEO + editor content transforms.
- * Optimized for Quill editors.
+ * Optimized for Quill editors (HTML output).
  */
 final class AiService
 {
     /**
-     * Chat Completions endpoint.
+     * OpenAI Responses API endpoint.
      */
-    private const BASE_URL = 'https://api.openai.com/v1/chat/completions';
+    private const BASE_URL = 'https://api.openai.com/v1/responses';
 
     /**
-     * Stable cost-quality model.
+     * Stable, supported model.
      */
-    private const MODEL = 'gpt-4o-mini';
+    private const MODEL = 'gpt-4.1-mini';
 
     /**
      * Transform editor text (rewrite / expand / shorten).
@@ -48,41 +48,33 @@ final class AiService
             default   => 'Rewrite professionally.',
         };
 
-        $system = <<<SYS
-                    You are a professional real estate content writer.
+        $prompt = <<<PROMPT
+        You are a professional real estate content writer.
 
-                    Output ONLY clean HTML suitable for a Quill editor.
+        Task:
+        {$instruction}
 
-                    Allowed tags:
-                    p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
+        Entity: {$entity}
+        Type: {$type}
 
-                    Rules:
-                    - No scripts
-                    - No inline styles
-                    - No hallucinations
-                    - English only
-                    SYS;
+        Rules:
+        - Output ONLY clean HTML
+        - Allowed tags: p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
+        - No scripts
+        - No inline styles
+        - English only
 
-                            $user = <<<TXT
-                    Entity: {$entity}
-                    Type: {$type}
+        Input:
+        {$text}
+        PROMPT;
 
-                    Task:
-                    {$instruction}
-
-                    Input:
-                    {$text}
-                    TXT;
-
-        $response = Http::withToken($key)->post(self::BASE_URL, [
-            'model' => self::MODEL,
-            'temperature' => 0.6,
-            'max_tokens' => 900,
-            'messages' => [
-                ['role' => 'system', 'content' => $system],
-                ['role' => 'user', 'content' => $user],
-            ],
-        ]);
+        $response = Http::withToken($key)
+            ->acceptJson()
+            ->post(self::BASE_URL, [
+                'model' => self::MODEL,
+                'input' => $prompt,
+                'max_output_tokens' => 900,
+            ]);
 
         if ($response->failed()) {
             throw new RuntimeException(
@@ -90,15 +82,15 @@ final class AiService
             );
         }
 
-        $html = trim((string) $response->json('choices.0.message.content'));
+        $html = trim((string) data_get($response->json(), 'output_text'));
 
-        return $this->basicHtmlAllowlist($html);
+        return $this->sanitizeHtml($html);
     }
 
     /**
-     * Minimal HTML allowlist sanitizer (frontend-safe complement).
+     * Minimal HTML allowlist sanitizer.
      */
-    private function basicHtmlAllowlist(string $html): string
+    private function sanitizeHtml(string $html): string
     {
         if ($html === '') {
             return '';
