@@ -382,19 +382,30 @@
         (() => {
             'use strict';
 
-            // 1) Init all Quill on page load (DOES NOT change design)
+            /* ---------------------------------------------------------
+             * 1. INIT QUILLS (ONCE, SAFE)
+             * --------------------------------------------------------- */
             document.addEventListener('DOMContentLoaded', () => {
-                window.QuillManager?.initWithin(document);
+                if (!window.QuillManager) {
+                    console.warn('QuillManager not loaded');
+                    return;
+                }
+                window.QuillManager.initWithin(document);
             });
 
-            // 2) Society Name -> Slug (non-destructive)
+            /* ---------------------------------------------------------
+             * 2. SLUG AUTO-GENERATION (NON-DESTRUCTIVE)
+             * --------------------------------------------------------- */
             document.addEventListener('DOMContentLoaded', () => {
                 const name = document.getElementById('name');
                 const slug = document.getElementById('slug');
                 if (!name || !slug) return;
 
                 let manual = false;
-                slug.addEventListener('input', () => { manual = true; });
+
+                slug.addEventListener('input', () => {
+                    manual = true;
+                });
 
                 name.addEventListener('input', () => {
                     if (manual) return;
@@ -407,13 +418,15 @@
                 });
             });
 
-            // 3) File preview (stable, no overflow)
+            /* ---------------------------------------------------------
+             * 3. IMAGE PREVIEW (UNCHANGED UX)
+             * --------------------------------------------------------- */
             document.addEventListener('change', (e) => {
                 const input = e.target;
                 if (!input || input.type !== 'file') return;
 
-                const file = input.files && input.files[0] ? input.files[0] : null;
-                if (!file || !file.type || !file.type.startsWith('image/')) return;
+                const file = input.files?.[0];
+                if (!file || !file.type.startsWith('image/')) return;
 
                 const wrap = input.closest('[data-preview-wrap]');
                 if (!wrap) return;
@@ -421,70 +434,35 @@
                 const preview = wrap.querySelector('.preview-box');
                 if (!preview) return;
 
-                const r = new FileReader();
-                r.onload = () => {
-                    preview.innerHTML = `<img src="${r.result}" class="w-full h-full object-cover" alt="Preview">`;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.innerHTML =
+                        `<img src="${reader.result}" class="w-full h-full object-cover" alt="Preview">`;
                 };
-                r.readAsDataURL(file);
+                reader.readAsDataURL(file);
             });
 
-            // 4) Axios submit
-            document.addEventListener('DOMContentLoaded', () => {
-                const form = document.getElementById('createSocietyForm');
-                if (!form) return;
-
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    try {
-                        const fd = new FormData(form);
-
-                        await axios.post('{{ route("admin.societies.store") }}', fd, {
-                            headers: { 'Content-Type': 'multipart/form-data' }
-                        });
-
-                        window.showToast?.('Society saved successfully', 'success');
-                    } catch (err) {
-                        // eslint-disable-next-line no-console
-                        console.error(err);
-                        window.showToast?.(err?.response?.data?.message || 'Failed to save society', 'error');
-                    }
-                });
-            });
-        })();
-    </script>
-    <script>
-        (() => {
-            'use strict';
-
-            /**
-             * AI → Quill bridge
-             * - Uses existing buttons
-             * - Uses existing QuillManager
-             * - Uses existing controller
-             * - ZERO UI changes
-             */
-
+            /* ---------------------------------------------------------
+             * 4. AI BUTTON → QUILl (SINGLE SOURCE OF TRUTH)
+             * --------------------------------------------------------- */
             document.addEventListener('click', async (e) => {
                 const btn = e.target.closest('[data-ai-action]');
                 if (!btn) return;
 
-                const action = btn.getAttribute('data-ai-action'); // rewrite | expand | shorten
-                const type   = btn.getAttribute('data-ai-type');   // residential_plots etc
+                const action = btn.getAttribute('data-ai-action');
+                const type   = btn.getAttribute('data-ai-type');
                 if (!action || !type) return;
 
                 const uid = `${type}_about`;
                 const quill = window.QuillManager?.editors?.[uid];
 
                 if (!quill) {
-                    window.showToast?.('Editor not ready yet', 'warning');
+                    window.showToast?.('Editor not ready', 'warning');
                     return;
                 }
 
                 const selection = quill.getSelection();
-                const hasSelection = selection && selection.length > 0;
-
-                const text = hasSelection
+                const text = selection && selection.length > 0
                     ? quill.getText(selection.index, selection.length).trim()
                     : quill.getText().trim();
 
@@ -496,7 +474,7 @@
                 btn.disabled = true;
 
                 try {
-                    window.showToast?.('AI is working…', 'info');
+                    window.showToast?.('AI working…', 'info');
 
                     const res = await axios.post(
                         '{{ route("admin.ai.editor.transform") }}',
@@ -511,7 +489,7 @@
                     const html = res?.data?.html;
                     if (!html) throw new Error('Empty AI response');
 
-                    if (hasSelection) {
+                    if (selection && selection.length > 0) {
                         quill.deleteText(selection.index, selection.length, 'user');
                         quill.clipboard.dangerouslyPasteHTML(selection.index, html, 'user');
                     } else {
@@ -519,7 +497,6 @@
                         quill.clipboard.dangerouslyPasteHTML(0, html, 'user');
                     }
 
-                    // sync hidden input
                     const hidden = document.getElementById(uid);
                     if (hidden) hidden.value = quill.root.innerHTML;
 
@@ -531,71 +508,27 @@
                     btn.disabled = false;
                 }
             });
-        })();
-    </script>
-    <script>
-        (() => {
-            'use strict';
 
+            /* ---------------------------------------------------------
+             * 5. FORM SUBMIT (UNCHANGED)
+             * --------------------------------------------------------- */
             document.addEventListener('DOMContentLoaded', () => {
+                const form = document.getElementById('createSocietyForm');
+                if (!form) return;
 
-                if (!window.QuillManager) {
-                    console.warn('QuillManager still not ready');
-                    return;
-                }
-
-                document.addEventListener('click', async (e) => {
-                    const btn = e.target.closest('[data-ai-action]');
-                    if (!btn) return;
-
-                    const action = btn.dataset.aiAction;
-                    const type   = btn.dataset.aiType;
-
-                    console.log('AI CLICK', action, type); // ✅ DEBUG LINE
-
-                    const editorKey = `${type}_about`;
-                    const quill = window.QuillManager.editors?.[editorKey];
-
-                    if (!quill) {
-                        window.showToast?.('Editor not found', 'warning');
-                        return;
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const fd = new FormData(form);
+                        await axios.post('{{ route("admin.societies.store") }}', fd);
+                        window.showToast?.('Society saved successfully', 'success');
+                    } catch (err) {
+                        console.error(err);
+                        window.showToast?.('Failed to save society', 'error');
                     }
-
-                    const selection = quill.getSelection();
-                    const sourceText = selection && selection.length
-                        ? quill.getText(selection.index, selection.length).trim()
-                        : quill.getText().trim();
-
-                    if (!sourceText) {
-                        window.showToast?.('Write something first', 'warning');
-                        return;
-                    }
-
-                    window.showToast?.('AI working…', 'info');
-
-                    const res = await axios.post(
-                        '{{ route("admin.ai.editor.transform") }}',
-                        {
-                            entity: 'society',
-                            type,
-                            action,
-                            text: sourceText
-                        }
-                    );
-
-                    const html = res?.data?.html;
-                    if (!html) throw new Error('Empty AI response');
-
-                    quill.setContents([], 'silent');
-                    quill.clipboard.dangerouslyPasteHTML(0, html);
-
-                    document.querySelector(`input[name="${editorKey}"]`).value =
-                        quill.root.innerHTML;
-
-                    window.showToast?.('AI done ✅', 'success');
                 });
             });
+
         })();
     </script>
-
 @endpush
