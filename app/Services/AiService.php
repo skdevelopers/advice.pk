@@ -35,7 +35,7 @@ final class AiService
         string $action,
         string $text
     ): string {
-        $key = trim((string) config('services.openai.key', env('OPENAI_API_KEY')));
+        $key = trim((string) config('services.openai.key'));
 
         if ($key === '') {
             throw new RuntimeException('OPENAI_API_KEY is missing.');
