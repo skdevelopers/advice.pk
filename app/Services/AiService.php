@@ -6,22 +6,9 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
-/**
- * Class AiService
- *
- * Central AI service for SEO + editor content transforms.
- * Optimized for Quill editors (HTML output).
- */
 final class AiService
 {
-    /**
-     * OpenAI Responses API endpoint.
-     */
     private const BASE_URL = 'https://api.openai.com/v1/responses';
-
-    /**
-     * Stable, supported model.
-     */
     private const MODEL = 'gpt-4.1-mini';
 
     /**
@@ -49,24 +36,24 @@ final class AiService
         };
 
         $prompt = <<<PROMPT
-        You are a professional real estate content writer.
+                You are a professional real estate content writer.
 
-        Task:
-        {$instruction}
+                Task:
+                {$instruction}
 
-        Entity: {$entity}
-        Type: {$type}
+                Entity: {$entity}
+                Type: {$type}
 
-        Rules:
-        - Output ONLY clean HTML
-        - Allowed tags: p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
-        - No scripts
-        - No inline styles
-        - English only
+                Rules:
+                - Output ONLY clean HTML
+                - Allowed tags: p, br, strong, em, u, a, ul, ol, li, h2, h3, blockquote
+                - No scripts
+                - No inline styles
+                - English only
 
-        Input:
-        {$text}
-        PROMPT;
+                Input:
+                {$text}
+                PROMPT;
 
         $response = Http::withToken($key)
             ->acceptJson()
@@ -82,20 +69,24 @@ final class AiService
             );
         }
 
-        $html = trim((string) data_get($response->json(), 'output_text'));
+        /**
+         * ✅ SAFE OUTPUT EXTRACTION (THIS WAS MISSING)
+         */
+        $html = collect($response->json('output'))
+            ->pluck('content')
+            ->flatten(1)
+            ->pluck('text')
+            ->implode("\n");
+
+        if (trim($html) === '') {
+            throw new RuntimeException('AI returned empty output.');
+        }
 
         return $this->sanitizeHtml($html);
     }
 
-    /**
-     * Minimal HTML allowlist sanitizer.
-     */
     private function sanitizeHtml(string $html): string
     {
-        if ($html === '') {
-            return '';
-        }
-
         $allowed = '<p><br><strong><em><u><a><ul><ol><li><h2><h3><blockquote>';
         $clean = strip_tags($html, $allowed);
 
