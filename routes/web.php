@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AiEditorController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CityController;
+use App\Http\Controllers\Admin\LockscreenController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\PropertyController;
@@ -61,10 +62,10 @@ Route::prefix('admin')->group(function () {
     })->name('admin.dashboard');
 
     Route::post('/ai/editor/transform', [AiEditorController::class, 'transform'])
+        ->middleware(['auth', 'throttle:10,1'])
         ->name('admin.ai.editor.transform');
     Route::post('/ai/quill', [AiEditorController::class, 'quill']);
-    Route::post('/ai/editor/transform', [AiEditorController::class, 'transform'])
-        ->name('admin.ai.editor.transform');
+
 
     Route::resource('blogs', BlogController::class)->names([
         'index'   => 'admin.blogs.index',

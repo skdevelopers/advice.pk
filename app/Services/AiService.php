@@ -85,6 +85,16 @@ PROMPT;
                 'status' => $response->status(),
                 'body'   => $response->body(),
             ]);
+            if ($response->status() === 429) {
+                Log::warning('OpenAI rate limit hit', [
+                    'user_id' => auth()->id(),
+                    'headers' => $response->headers(),
+                ]);
+
+                throw new RuntimeException(
+                    'AI is temporarily busy. Please wait 20–30 seconds and try again.'
+                );
+            }
 
             throw new RuntimeException(
                 'OpenAI request failed (HTTP ' . $response->status() . ')'

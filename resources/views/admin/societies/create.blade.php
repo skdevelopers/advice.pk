@@ -205,11 +205,20 @@
 
                                                 {{-- AI buttons (WORKING via quill-manager.js) --}}
                                                 <div class="flex items-center gap-1">
-                                                    <button type="button"
-                                                            class="inline-flex items-center justify-center h-7 px-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-xs"
-                                                            data-ai-action="rewrite"
-                                                            data-ai-type="{{ $type }}"
-                                                            title="Rewrite">R</button>
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex items-center justify-center h-7 px-2 rounded
+                                                         bg-indigo-600 text-white text-xs
+                                                         hover:bg-indigo-700
+                                                         disabled:opacity-60
+                                                         disabled:cursor-not-allowed
+                                                         disabled:animate-pulse"
+                                                        data-ai-action="rewrite"
+                                                        data-ai-type="{{ $type }}"
+                                                    >
+                                                        R
+                                                    </button>
+
 
                                                     <button type="button"
                                                             class="inline-flex items-center justify-center h-7 px-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-xs"
@@ -447,10 +456,10 @@
              * --------------------------------------------------------- */
             document.addEventListener('click', async (e) => {
                 const btn = e.target.closest('[data-ai-action]');
-                if (!btn) return;
+                if (!btn || btn.dataset.loading === '1') return;
 
-                const action = btn.getAttribute('data-ai-action');
-                const type   = btn.getAttribute('data-ai-type');
+                const action = btn.dataset.aiAction;
+                const type   = btn.dataset.aiType;
                 if (!action || !type) return;
 
                 const uid = `${type}_about`;
@@ -471,28 +480,30 @@
                     return;
                 }
 
-                // 🔹 ADD: loading animation (Tailwind only)
+                // 🔹 LOCK BUTTON
+                btn.dataset.loading = '1';
+                btn.disabled = true;
+
                 const originalHtml = btn.innerHTML;
                 btn.classList.add('opacity-70', 'cursor-wait');
                 btn.innerHTML = `
-                  <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a12 12 0 00-12 12h4z"></path>
-                  </svg>
-                `;
-                btn.disabled = true;
+                                    <svg class="animate-spin h-4 w-4 text-white"
+                                         xmlns="http://www.w3.org/2000/svg"
+                                         fill="none"
+                                         viewBox="0 0 24 24">
+                                      <circle class="opacity-25" cx="12" cy="12" r="10"
+                                              stroke="currentColor" stroke-width="4"></circle>
+                                      <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4l3-3-3-3v4a12 12 0 00-12 12h4z"></path>
+                                    </svg>
+                                `;
 
                 try {
                     window.showToast?.('AI working…', 'info');
 
                     const res = await axios.post(
                         '{{ route("admin.ai.editor.transform") }}',
-                        {
-                            entity: 'society',
-                            type,
-                            action,
-                            text
-                        }
+                        { entity: 'society', type, action, text }
                     );
 
                     const html = res?.data?.html;
@@ -500,21 +511,27 @@
 
                     if (selection && selection.length > 0) {
                         quill.deleteText(selection.index, selection.length, 'user');
-                        quill.clipboard.dangerouslyPasteHTML(selection.index, html, 'user');
+                        quill.clipboard.dangerouslyPasteHTML(selection.index, html);
                     } else {
                         quill.setText('');
-                        quill.clipboard.dangerouslyPasteHTML(0, html, 'user');
+                        quill.clipboard.dangerouslyPasteHTML(0, html);
                     }
 
-                    const hidden = document.getElementById(uid);
-                    if (hidden) hidden.value = quill.root.innerHTML;
-
+                    document.getElementById(uid).value = quill.root.innerHTML;
                     window.showToast?.('AI applied', 'success');
+
                 } catch (err) {
                     console.error(err);
-                    window.showToast?.('AI failed', 'error');
+                    window.showToast?.(
+                        err?.response?.data?.message || 'AI failed',
+                        'error'
+                    );
                 } finally {
+                    // 🔓 UNLOCK BUTTON
                     btn.disabled = false;
+                    btn.dataset.loading = '0';
+                    btn.classList.remove('opacity-70', 'cursor-wait');
+                    btn.innerHTML = originalHtml;
                 }
             });
 
